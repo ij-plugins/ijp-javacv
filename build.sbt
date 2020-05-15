@@ -1,7 +1,7 @@
 import sbt.Keys.version
 // @formatter:off
 
-lazy val _version       = "0.2.2-SNAPSHOT"
+lazy val _version       = "0.2.2.1-SNAPSHOT"
 lazy val _scalaVersions = Seq("2.13.1", "2.12.10")
 lazy val _scalaVersion  = _scalaVersions.head
 
@@ -19,17 +19,18 @@ val commonSettings = Seq(
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
   classpathTypes += "maven-plugin",
   libraryDependencies ++= Seq(
-    "org.bytedeco"   % "javacpp"    % "1.5.1"       withSources() withJavadoc(),
-    "org.bytedeco"   % "javacv"     % "1.5.1"       withSources() withJavadoc(),
-    "org.bytedeco"   % "opencv"     % "4.1.0-1.5.1" withSources() withJavadoc(),
-    "org.bytedeco"   % "opencv"     % "4.1.0-1.5.1" classifier platform,
-    "org.bytedeco"   % "openblas"   % "0.3.6-1.5.1" withSources() withJavadoc(),
-    "org.bytedeco"   % "openblas"   % "0.3.6-1.5.1" classifier platform,
+    "org.bytedeco"   % "javacpp"    % "1.5.3"       withSources() withJavadoc(),
+    "org.bytedeco"   % "javacpp"    % "1.5.3"       classifier platform,
+    "org.bytedeco"   % "javacv"     % "1.5.3"       withSources() withJavadoc(),
+    "org.bytedeco"   % "opencv"     % "4.3.0-1.5.3" withSources() withJavadoc(),
+    "org.bytedeco"   % "opencv"     % "4.3.0-1.5.3" classifier platform,
+    "org.bytedeco"   % "openblas"   % "0.3.9-1.5.3" withSources() withJavadoc(),
+    "org.bytedeco"   % "openblas"   % "0.3.9-1.5.3" classifier platform,
     "net.imagej"     % "ij"         % "1.52n",
 //    "com.beachape"  %% "enumeratum" % "1.5.13",
 //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest"  % "3.0.8"  % "test",
+    "org.scalatest" %% "scalatest"  % "3.1.2"  % "test",
   ),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
@@ -41,6 +42,11 @@ val commonSettings = Seq(
   autoCompilerPlugins := true,
   // fork a new JVM for 'run' and 'test:run'
   fork := true,
+  // ImageJ Plugins
+  ijRuntimeSubDir         := "sandbox",
+  ijPluginsSubDir         := "ij-plugins",
+  ijCleanBeforePrepareRun := true,
+  cleanFiles              += ijPluginsDir.value,
   //
   manifestSetting,
   publishSetting
@@ -71,6 +77,15 @@ lazy val ijp_javacv_plugins =
       description := "IJP JavaCV ImageJ Plugins",
       publishArtifact := false)
     .dependsOn(ijp_javacv_core)
+
+lazy val examples =
+  project.in(file("examples"))
+    .settings(commonSettings,
+      name := "examples",
+      description := "IJP JavaCV Examples",
+      publishArtifact := false)
+    .dependsOn(ijp_javacv_plugins)
+
 
 // Set the prompt (for this build) to include the project id.
 shellPrompt in ThisBuild := { state => "sbt:" + Project.extract(state).currentRef.project + "> " }
