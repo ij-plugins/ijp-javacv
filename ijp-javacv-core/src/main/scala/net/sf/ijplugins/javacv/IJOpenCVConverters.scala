@@ -8,8 +8,8 @@ package net.sf.ijplugins.javacv
 
 import java.awt.image._
 
-import ij.ImagePlus
 import ij.process._
+import ij.{ImagePlus, ImageStack}
 import org.bytedeco.javacv.{Java2DFrameConverter, OpenCVFrameConverter}
 import org.bytedeco.opencv.opencv_core._
 
@@ -140,8 +140,21 @@ object IJOpenCVConverters {
 
   def toMat(src: ImageProcessor): Mat = {
     require(src != null)
+    toMat(new ImagePlus("", src))
+  }
 
-    val frame = new ImagePlusFrameConverter().convert(new ImagePlus("", src))
+  def toMat[T <: ImageProcessor](fps: Array[T]): Mat = {
+    if (fps.isEmpty) {
+      new Mat()
+    } else {
+      toMat(new ImagePlus("", toStack(fps)))
+    }
+  }
+
+  def toMat(src: ImagePlus): Mat = {
+    require(src != null)
+
+    val frame = new ImagePlusFrameConverter().convert(src)
     new OpenCVFrameConverter.ToMat().convert(frame)
 
 
@@ -167,5 +180,13 @@ object IJOpenCVConverters {
 
   }
 
-
+  def toStack[T <: ImageProcessor](ips: Array[T]): ImageStack = {
+    if (ips.isEmpty) {
+      new ImageStack()
+    } else {
+      val stack = new ImageStack(ips(0).getWidth, ips(0).getHeight)
+      ips.foreach(ip => stack.addSlice(ip))
+      stack
+    }
+  }
 }

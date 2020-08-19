@@ -9,7 +9,7 @@ package net.sf.ijplugins.javacv
 import java.nio.{ByteBuffer, FloatBuffer, ShortBuffer}
 
 import ij.ImagePlus
-import ij.process.ColorProcessor
+import ij.process.{ColorProcessor, ImageProcessor}
 import org.bytedeco.javacv.{Frame, FrameConverter}
 
 /**
@@ -27,12 +27,19 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     }
 
     val (imageDepth, channels) = imp.getType match {
-      case ImagePlus.GRAY8 => (Frame.DEPTH_UBYTE, 1)
-      case ImagePlus.GRAY16 => (Frame.DEPTH_USHORT, 1)
-      case ImagePlus.GRAY32 => (Frame.DEPTH_FLOAT, 1)
-      case ImagePlus.COLOR_256 => (Frame.DEPTH_UBYTE, 1)
-      case ImagePlus.COLOR_RGB => (Frame.DEPTH_UBYTE, 3)
-      case _ => ???
+      case ImagePlus.GRAY8 => (Frame.DEPTH_UBYTE, imp.getStackSize)
+      case ImagePlus.GRAY16 => (Frame.DEPTH_USHORT, imp.getStackSize)
+      case ImagePlus.GRAY32 => (Frame.DEPTH_FLOAT, imp.getStackSize)
+      case ImagePlus.COLOR_256 => (Frame.DEPTH_UBYTE, imp.getStackSize)
+      case ImagePlus.COLOR_RGB =>
+        if (imp.getStackSize != 1) {
+          throw new UnsupportedOperationException(s"RGB ImagePlus supported only with stack size == 1, " +
+            s"got: ${imp.getStackSize}")
+        } else {
+          (Frame.DEPTH_UBYTE, 3)
+        }
+      case t =>
+        throw new UnsupportedOperationException(s"Unsupported ImagePlus type: $t")
     }
 
     val width = imp.getWidth
@@ -50,35 +57,45 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     // assume matching strides
     val buffer = frame.image(0).position(0)
 
-    val ip = imp.getProcessor
+    val ips: Array[ImageProcessor] = {
+      val stack = imp.getStack
+      for (k <- (1 to stack.getSize).toArray) yield stack.getProcessor(k)
+    }
+
     imp.getType match {
-      case ImagePlus.GRAY8 | ImagePlus.COLOR_256 =>
-        val b = buffer.asInstanceOf[ByteBuffer]
-        val ipPixels = ip.getPixels.asInstanceOf[Array[Byte]]
-        copyPixels(ipPixels, b, width, height, frame.imageStride, 0)
-      case ImagePlus.GRAY16 =>
-        val b = buffer.asInstanceOf[ShortBuffer]
-        val ipPixels = ip.getPixels.asInstanceOf[Array[Short]]
-        val rowPixels = new Array[Short](width)
-        b.position(0)
-        for (i <- 0 until height) {
-          b.position(i * frame.imageStride)
-          System.arraycopy(ipPixels, i * width, rowPixels, 0, rowPixels.length)
-          b.put(rowPixels)
-        }
-      case ImagePlus.GRAY32 =>
-        val b = buffer.asInstanceOf[FloatBuffer]
-        val ipPixels = ip.getPixels.asInstanceOf[Array[Float]]
-        val rowPixels = new Array[Float](width)
-        b.position(0)
-        for (i <- 0 until height) {
-          b.position(i * frame.imageStride)
-          System.arraycopy(ipPixels, i * width, rowPixels, 0, rowPixels.length)
-          b.put(rowPixels)
-        }
+
+      case ImagePlus.GRAY8
+           | ImagePlus.COLOR_256 => // Byte
+        val srcPixels = ips.map(_.getPixels.asInstanceOf[Array[Byte]])
+        val dstPixels = new Array[Byte](frame.imageStride * height)
+        copyPixels(width, height, channels, frame.imageStride, srcPixels, dstPixels)
+
+        val dstBuffer = buffer.asInstanceOf[ByteBuffer]
+        dstBuffer.position(0)
+        dstBuffer.put(dstPixels)
+
+      case ImagePlus.GRAY16 => // Short
+        val srcPixels = ips.map(_.getPixels.asInstanceOf[Array[Short]])
+        val dstPixels = new Array[Short](frame.imageStride * height)
+        copyPixels(width, height, channels, frame.imageStride, srcPixels, dstPixels)
+
+        val dstBuffer = buffer.asInstanceOf[ShortBuffer]
+        dstBuffer.position(0)
+        dstBuffer.put(dstPixels)
+
+      case ImagePlus.GRAY32 => // Float
+        val srcPixels = ips.map(_.getPixels.asInstanceOf[Array[Float]])
+        val dstPixels = new Array[Float](frame.imageStride * height)
+        copyPixels(width, height, channels, frame.imageStride, srcPixels, dstPixels)
+
+        val dstBuffer = buffer.asInstanceOf[FloatBuffer]
+        dstBuffer.position(0)
+        dstBuffer.put(dstPixels)
+
       case ImagePlus.COLOR_RGB =>
-        val b = buffer.asInstanceOf[ByteBuffer]
-        val cp = ip.asInstanceOf[ColorProcessor]
+        val dstBuffer = buffer.asInstanceOf[ByteBuffer]
+        // Only single slice color images are currently supported
+        val cp = ips(0).asInstanceOf[ColorProcessor]
         val pixels = cp.getPixels.asInstanceOf[Array[Int]]
         for (y <- 0 until height) {
           val rowPixels = new Array[Byte](width * channels)
@@ -94,26 +111,38 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
             rowPixels(x * channels + 2) = r
             //            rowPixels(x * channels + 3) = a
           }
-          b.position(y * frame.imageStride)
-          b.put(rowPixels)
+          dstBuffer.position(y * frame.imageStride)
+          dstBuffer.put(rowPixels)
         }
-      case _ => ???
+      case t =>
+        throw new UnsupportedOperationException(s"Unsupported ImagePlus type: $t")
     }
 
     frame
   }
 
 
-  def copyPixels(srcPixels: Array[Byte], destBuffer: ByteBuffer,
-                 width: Int, height: Int, destStride: Int, destOffset: Int = 0) = {
-    val rowPixels = new Array[Byte](width)
-    destBuffer.position(destOffset)
+  private def copyPixels[T](width: Int,
+                            height: Int,
+                            channels: Int,
+                            imageStride: Int,
+                            srcPixels: Array[Array[T]],
+                            dstPixels: Array[T]): Unit = {
     for (i <- 0 until height) {
-      destBuffer.position(i * frame.imageStride)
-      System.arraycopy(srcPixels, i * width, rowPixels, 0, rowPixels.length)
-      destBuffer.put(rowPixels)
+      val src_offset_i = i * width
+      val dst_offset_i = i * imageStride
+      if (channels == 1) {
+        // We can use a bit of speedup using system copy
+        System.arraycopy(srcPixels, src_offset_i, dstPixels, dst_offset_i, width)
+      } else {
+        for (j <- 0 until width) {
+          val dst_offset_j = dst_offset_i + j * channels
+          for (k <- 0 until channels) {
+            dstPixels(dst_offset_j + k) = srcPixels(k)(src_offset_i + j)
+          }
+        }
+      }
     }
-
   }
 
   private def toImagePlus(frame: Frame): ImagePlus = {

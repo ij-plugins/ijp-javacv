@@ -1,7 +1,7 @@
 import sbt.Keys.version
 // @formatter:off
 
-lazy val _version       = "0.2.2.1-SNAPSHOT"
+lazy val _version       = "0.3.0.0-SNAPSHOT"
 lazy val _scalaVersions = Seq("2.13.3", "2.12.12")
 lazy val _scalaVersion  = _scalaVersions.head
 
