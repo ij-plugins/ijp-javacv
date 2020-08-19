@@ -2,7 +2,7 @@ import sbt.Keys.version
 // @formatter:off
 
 lazy val _version       = "0.2.2.1-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.1", "2.12.10")
+lazy val _scalaVersions = Seq("2.13.3", "2.12.12")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name         := "ijp-javacv"
@@ -26,11 +26,11 @@ val commonSettings = Seq(
     "org.bytedeco"   % "opencv"     % "4.3.0-1.5.3" classifier platform,
     "org.bytedeco"   % "openblas"   % "0.3.9-1.5.3" withSources() withJavadoc(),
     "org.bytedeco"   % "openblas"   % "0.3.9-1.5.3" classifier platform,
-    "net.imagej"     % "ij"         % "1.52n",
+    "net.imagej"     % "ij"         % "1.53c",
 //    "com.beachape"  %% "enumeratum" % "1.5.13",
 //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest"  % "3.1.2"  % "test",
+    "org.scalatest" %% "scalatest"  % "3.2.1"  % "test",
   ),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
