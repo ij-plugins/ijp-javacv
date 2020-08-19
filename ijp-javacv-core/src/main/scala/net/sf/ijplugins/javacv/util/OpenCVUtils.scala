@@ -395,7 +395,7 @@ object OpenCVUtils {
     new AffineTransform(afm)
   }
 
-  def affineTransforToHomography(t: AffineTransform): Mat = {
+  def affineTransformToHomography(t: AffineTransform): Mat = {
     val homography = new Mat(3, 3, CV_64F)
     val hIndexer = homography.createIndexer().asInstanceOf[DoubleIndexer]
 
