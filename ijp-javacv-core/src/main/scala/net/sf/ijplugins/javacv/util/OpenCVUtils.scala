@@ -6,15 +6,9 @@
 
 package net.sf.ijplugins.javacv.util
 
-import java.awt._
-import java.awt.geom.{AffineTransform, Ellipse2D, Point2D}
-import java.awt.image.BufferedImage
-import java.io.{File, IOException}
-
 import ij.ImagePlus
 import ij.gui.{Overlay, ShapeRoi}
 import ij.process.ColorProcessor
-import javax.swing.WindowConstants
 import org.bytedeco.javacpp.DoublePointer
 import org.bytedeco.javacpp.indexer.{DoubleIndexer, FloatIndexer}
 import org.bytedeco.javacv.OpenCVFrameConverter.ToMat
@@ -24,6 +18,11 @@ import org.bytedeco.opencv.global.opencv_imgcodecs._
 import org.bytedeco.opencv.global.opencv_imgproc._
 import org.bytedeco.opencv.opencv_core.{Point, _}
 
+import java.awt._
+import java.awt.geom.{AffineTransform, Ellipse2D, Point2D}
+import java.awt.image.BufferedImage
+import java.io.{File, IOException}
+import javax.swing.WindowConstants
 import scala.math.round
 
 
@@ -451,4 +450,16 @@ object OpenCVUtils {
   }
 
 
+  /**
+   * Create a copy of a BufferedImage
+   *
+   * @param bi source
+   * @return deep copy of the source
+   */
+  def deepCopy(bi: BufferedImage): BufferedImage = {
+    val cm = bi.getColorModel
+    val isAlphaPremultiplied = cm.isAlphaPremultiplied
+    val raster = bi.copyData(null)
+    new BufferedImage(cm, raster, isAlphaPremultiplied, null)
+  }
 }
