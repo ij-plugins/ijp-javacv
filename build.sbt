@@ -86,6 +86,8 @@ lazy val examples =
       publishArtifact := false)
     .dependsOn(ijp_javacv_plugins)
 
+addCommandAlias("ijRun", "ijp_javacv_plugins/ijRun")
+
 
 // Set the prompt (for this build) to include the project id.
 shellPrompt in ThisBuild := { state => "sbt:" + Project.extract(state).currentRef.project + "> " }
