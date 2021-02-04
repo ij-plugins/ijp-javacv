@@ -6,12 +6,12 @@
 
 package net.sf.ijplugins.javacv
 
-import java.awt.image._
-
 import ij.process._
 import ij.{ImagePlus, ImageStack}
 import org.bytedeco.javacv.{Java2DFrameConverter, OpenCVFrameConverter}
 import org.bytedeco.opencv.opencv_core._
+
+import java.awt.image._
 
 /**
  * Converts between OpenCV and ImageJ data representations
@@ -155,7 +155,10 @@ object IJOpenCVConverters {
     require(src != null)
 
     val frame = new ImagePlusFrameConverter().convert(src)
-    new OpenCVFrameConverter.ToMat().convert(frame)
+    val converter = new OpenCVFrameConverter.ToMat()
+    // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
+    //   see https://github.com/bytedeco/javacpp-presets/issues/979
+    converter.convert(frame).clone()
 
 
     //    val width = src.getWidth
