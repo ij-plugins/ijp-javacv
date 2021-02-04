@@ -10,6 +10,7 @@ scalaVersion := _scalaVersion
 
 // Platform classifier for native library dependencies
 val platform = org.bytedeco.javacpp.Loader.getPlatform
+// @formatter:off
 val commonSettings = Seq(
   organization := "net.sf.ij-plugins",
   version      := _version,
@@ -39,6 +40,7 @@ val commonSettings = Seq(
     // Use local maven repo for local javacv builds
     Resolver.mavenLocal
   ),
+  exportJars := true,
   autoCompilerPlugins := true,
   // fork a new JVM for 'run' and 'test:run'
   fork := true,
@@ -51,6 +53,7 @@ val commonSettings = Seq(
   manifestSetting,
   publishSetting
 )
+// @formatter:on
 
 // Resolvers
 lazy val sonatypeNexusSnapshots = Resolver.sonatypeRepo("snapshots")
@@ -65,34 +68,65 @@ lazy val publishSetting = publishTo := {
 }
 
 lazy val ijp_javacv_core =
-  project.in(file("ijp-javacv-core"))
-    .settings(commonSettings,
+  project
+    .in(file("ijp-javacv-core"))
+    .settings(
+      commonSettings,
       name := "ijp-javacv-core",
-      description := "IJP JavaCV Core")
+      description := "IJP JavaCV Core"
+    )
 
 lazy val ijp_javacv_plugins =
-  project.in(file("ijp-javacv-plugins"))
-    .settings(commonSettings,
+  project
+    .in(file("ijp-javacv-plugins"))
+    .settings(
+      commonSettings,
       name := "ijp-javacv-plugins",
       description := "IJP JavaCV ImageJ Plugins",
-      publishArtifact := false)
+      publishArtifact := false,
+      skip in publish := true,
+    )
     .dependsOn(ijp_javacv_core)
 
 lazy val examples =
-  project.in(file("examples"))
-    .settings(commonSettings,
+  project
+    .in(file("examples"))
+    .settings(
+      commonSettings,
       name := "examples",
       description := "IJP JavaCV Examples",
-      publishArtifact := false)
+      publishArtifact := false,
+      skip in publish := true,
+    )
     .dependsOn(ijp_javacv_plugins)
 
-addCommandAlias("ijRun", "ijp_javacv_plugins/ijRun")
+// The 'experimental' is not a part of distribution.
+// It is intended for ImageJ with plugins and fast local experimentation with new features.
+lazy val experimental = project
+  .in(file("experimental"))
+  .settings(
+    commonSettings,
+    name := "experimental",
+    // Do not publish this artifact
+    publishArtifact := false,
+    skip in publish := true,
+    // Customize `sbt-imagej` plugin
+    ijRuntimeSubDir := "sandbox",
+    ijPluginsSubDir := "ij-plugins",
+    ijCleanBeforePrepareRun := true,
+    cleanFiles += ijPluginsDir.value,
+  )
+  .dependsOn(ijp_javacv_plugins)
+
+addCommandAlias("ijRun", "experimental/ijRun")
 
 
 // Set the prompt (for this build) to include the project id.
 shellPrompt in ThisBuild := { state => "sbt:" + Project.extract(state).currentRef.project + "> " }
 publishArtifact := false
+skip in publish := true
 
+// @formatter:off
 lazy val manifestSetting = packageOptions += {
   Package.ManifestAttributes(
     "Created-By"               -> "Simple Build Tool",
@@ -108,6 +142,7 @@ lazy val manifestSetting = packageOptions += {
     "Implementation-Vendor"    -> organization.value
   )
 }
+// @formatter:on
 pomExtra :=
   <scm>
     <url>https://github.com/ij-plugins/ijp-toolkit</url>
