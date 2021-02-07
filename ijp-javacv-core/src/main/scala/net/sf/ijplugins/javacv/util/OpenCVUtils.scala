@@ -69,6 +69,26 @@ object OpenCVUtils {
     image
   }
 
+
+  /**
+   * Assume that image may contain multiple pages (slices). It is using OpenCV `imreadmulti` internally.
+   *
+   * @param file image file
+   * @return Mat representing the combined image, individual pages/slices are merged as channels
+   */
+  def loadMulti(file: File): Mat = {
+    // Read input image
+    val matV = new MatVector()
+    val ok = imreadmulti(file.getAbsolutePath, matV, IMREAD_UNCHANGED)
+    if (!ok) {
+      throw new IOException("Couldn't load image: " + file.getAbsolutePath)
+    }
+
+    val mat = new Mat()
+    merge(matV, mat)
+    mat
+  }
+
   /** Load an image and show in a CanvasFrame.
    *
    * @param flags Flags specifying the color type of a loaded image:
