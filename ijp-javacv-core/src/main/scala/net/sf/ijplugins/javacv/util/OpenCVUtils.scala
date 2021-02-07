@@ -60,7 +60,7 @@ object OpenCVUtils {
    * @return loaded image
    * @throws IOException if image cannot be loaded
    */
-  def load(file: File, flags: Int = IMREAD_COLOR): Mat = {
+  def load(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
     // Read input image
     val image = imread(file.getAbsolutePath, flags)
     if (image.empty()) {
@@ -83,7 +83,7 @@ object OpenCVUtils {
    * @return loaded image
    * @throws IOException if image cannot be loaded
    */
-  def loadAndShow(file: File, flags: Int = IMREAD_COLOR): Mat = {
+  def loadAndShow(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
     // Read input image
     val image = load(file, flags)
     show(image, file.getName)
@@ -103,7 +103,7 @@ object OpenCVUtils {
    *              Default is gray scale.
    * @return loaded image
    */
-  def loadAndShowOrExit(file: File, flags: Int = IMREAD_COLOR): Mat = {
+  def loadAndShowOrExit(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
     // Read input image
     val image = loadOrExit(file, flags)
     show(image, file.getName)
@@ -123,7 +123,7 @@ object OpenCVUtils {
    *              Default is gray scale.
    * @return loaded image
    */
-  def loadOrExit(file: File, flags: Int = IMREAD_COLOR): Mat = {
+  def loadOrExit(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
     // Read input image
     val image = try {
       load(file, flags)
