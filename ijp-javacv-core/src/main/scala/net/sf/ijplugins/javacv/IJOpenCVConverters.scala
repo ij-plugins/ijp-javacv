@@ -8,7 +8,7 @@ package net.sf.ijplugins.javacv
 
 import ij.process._
 import ij.{ImagePlus, ImageStack}
-import org.bytedeco.javacv.{Java2DFrameConverter, OpenCVFrameConverter}
+import org.bytedeco.javacv.OpenCVFrameConverter
 import org.bytedeco.opencv.opencv_core._
 
 import java.awt.image._
@@ -29,8 +29,7 @@ object IJOpenCVConverters {
   def toImageProcessor(image: Mat): ImageProcessor = {
     val converter = new OpenCVFrameConverter.ToMat()
     val frame = converter.convert(image)
-    val bi = new Java2DFrameConverter().convert(frame)
-    toImageProcessor(bi)
+    new ImageProcessorFrameConverter().convert(frame)
   }
 
 
@@ -46,6 +45,18 @@ object IJOpenCVConverters {
       case _ => throw new IllegalArgumentException("Input image is not a color image.")
     }
   }
+
+  /**
+   * Convert OpenCV `Mat` to ImageJ's ImagePlus.
+   *
+   * @param image input image.
+   */
+  def toImagePlus(image: Mat): ImagePlus = {
+    val converter = new OpenCVFrameConverter.ToMat()
+    val frame = converter.convert(image)
+    new ImagePlusFrameConverter().convert(frame)
+  }
+
 
   /** Convert ImageJ's `ImageProcessor` to `BufferedImage`. */
   def toBufferedImage(ip: ImageProcessor): BufferedImage = {
@@ -138,11 +149,18 @@ object IJOpenCVConverters {
   }
 
 
+  /** Convert `ImageProcessor` to `Mat`. */
   def toMat(src: ImageProcessor): Mat = {
     require(src != null)
-    toMat(new ImagePlus("", src))
+    val frame = new ImageProcessorFrameConverter().convert(src)
+    val converter = new OpenCVFrameConverter.ToMat()
+    // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
+    //   see https://github.com/bytedeco/javacpp-presets/issues/979
+    converter.convert(frame).clone()
   }
 
+
+  /** Convert array of `ImageProcessor`s to `Mat`. A channel will be created for each image. */
   def toMat[T <: ImageProcessor](fps: Array[T]): Mat = {
     if (fps.isEmpty) {
       new Mat()
@@ -151,6 +169,8 @@ object IJOpenCVConverters {
     }
   }
 
+
+  /** Convert `ImagePlus` to `Mat`. If there re multiple slices they will be converted to channels. */
   def toMat(src: ImagePlus): Mat = {
     require(src != null)
 
@@ -159,30 +179,16 @@ object IJOpenCVConverters {
     // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
     //   see https://github.com/bytedeco/javacpp-presets/issues/979
     converter.convert(frame).clone()
-
-
-    //    val width = src.getWidth
-    //    val height = src.getHeight
-    //
-    //    src match {
-    //      case ip: ByteProcessor =>
-    //        val pixels = ip.getPixels.asInstanceOf[Array[Byte]]
-    //        val dest = new Mat(height, width, CV_8U)
-    //        val indexer = dest.createIndexer().asInstanceOf[UByteRawIndexer]
-    //        val buffer = indexer.buffer().asInstanceOf[ByteBuffer]
-    //        buffer.put(pixels)
-    //        dest
-    //      case cp: ColorProcessor =>
-    //        val bi = cp.getBufferedImage
-    //        val converter = new Java2DFrameConverter()
-    //        val frame = converter.convert(bi)
-    //        new OpenCVFrameConverter.ToMat().convert(frame)
-    //
-    //      case _ => throw new RuntimeException("Unsupported ImageProcessor type: " + src.getClass.getName)
-    //    }
-
   }
 
+
+  /**
+   * Create ImageStack from an array of `ImageProcessor`s
+   *
+   * @param ips input array
+   * @tparam T Type of ImageProcessor
+   * @return image stack
+   */
   def toStack[T <: ImageProcessor](ips: Array[T]): ImageStack = {
     if (ips.isEmpty) {
       new ImageStack()
