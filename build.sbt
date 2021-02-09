@@ -1,20 +1,30 @@
 import sbt.Keys.version
+import xerial.sbt.Sonatype.GitHubHosting
+
 // @formatter:off
 
-lazy val _version       = "0.3.0.0-SNAPSHOT"
+lazy val _version       = "0.3.1"
 lazy val _scalaVersions = Seq("2.13.4", "2.12.13")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name         := "ijp-javacv"
 scalaVersion := _scalaVersion
+publishArtifact     := false
+skip in publish     := true
+sonatypeProfileName := "net.sf.ij-plugins"
 
 // Platform classifier for native library dependencies
-val platform = org.bytedeco.javacpp.Loader.getPlatform
+val platform = org.bytedeco.javacpp.Loader.Detector.getPlatform
 // @formatter:off
 val commonSettings = Seq(
-  organization := "net.sf.ij-plugins",
   version      := _version,
+  organization := "net.sf.ij-plugins",
+  homepage     := Some(new URL("https://github.com/ij-plugins/ijp-javacv")),
+  startYear    := Some(2002),
+  licenses     := Seq(("LGPL-2.1", new URL("http://opensource.org/licenses/LGPL-2.1"))),
+  //
   scalaVersion := _scalaVersion,
+  //
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xlint", "-explaintypes"),
   javacOptions  ++= Seq("-deprecation", "-Xlint"),
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
@@ -33,6 +43,17 @@ val commonSettings = Seq(
     // tests             
     "org.scalatest" %% "scalatest"  % "3.2.3"  % "test",
   ),
+  scalacOptions in(Compile, doc) ++= Opts.doc.title("IJP JavaCV API"),
+  scalacOptions in(Compile, doc) ++= Opts.doc.version(_version),
+  scalacOptions in(Compile, doc) ++= Seq(
+    "-doc-footer", s"IJP JavaCV API v.${_version}",
+    "-doc-root-content", baseDirectory.value + "/src/main/scala/root-doc.creole"
+  ),
+  scalacOptions in(Compile, doc) ++= (
+    Option(System.getenv("GRAPHVIZ_DOT_PATH")) match {
+      case Some(path) => Seq("-diagrams", "-diagrams-dot-path", path, "-diagrams-debug")
+      case None => Seq.empty[String]
+    }),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
     // ImageJ repo for mpicbg
@@ -40,7 +61,9 @@ val commonSettings = Seq(
     // Use local maven repo for local javacv builds
     Resolver.mavenLocal
   ),
+  //
   exportJars := true,
+  //
   autoCompilerPlugins := true,
   // fork a new JVM for 'run' and 'test:run'
   fork := true,
@@ -51,21 +74,20 @@ val commonSettings = Seq(
   cleanFiles              += ijPluginsDir.value,
   //
   manifestSetting,
-  publishSetting
+  // Setup publishing
+  publishMavenStyle := true,
+  sonatypeProfileName := "net.sf.ij-plugins",
+  sonatypeProjectHosting := Some(GitHubHosting("ij-plugins", "ijp-javacv", "jpsacha@gmail.com")),
+  publishTo := sonatypePublishToBundle.value,
+  developers := List(
+    Developer(id="jpsacha", name="Jarek Sacha", email="jpsacha@gmail.com", url=url("https://github.com/jpsacha"))
+  )
 )
 // @formatter:on
 
 // Resolvers
 lazy val sonatypeNexusSnapshots = Resolver.sonatypeRepo("snapshots")
 lazy val sonatypeNexusStaging = "Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-
-lazy val publishSetting = publishTo := {
-  val version: String = _version
-  if (version.trim.endsWith("SNAPSHOT"))
-    Some(sonatypeNexusSnapshots)
-  else
-    Some(sonatypeNexusStaging)
-}
 
 lazy val ijp_javacv_core =
   project
@@ -121,11 +143,6 @@ lazy val experimental = project
 addCommandAlias("ijRun", "experimental/ijRun")
 
 
-// Set the prompt (for this build) to include the project id.
-shellPrompt in ThisBuild := { state => "sbt:" + Project.extract(state).currentRef.project + "> " }
-publishArtifact := false
-skip in publish := true
-
 // @formatter:off
 lazy val manifestSetting = packageOptions += {
   Package.ManifestAttributes(
@@ -143,15 +160,3 @@ lazy val manifestSetting = packageOptions += {
   )
 }
 // @formatter:on
-pomExtra :=
-  <scm>
-    <url>https://github.com/ij-plugins/ijp-toolkit</url>
-    <connection>scm:https://github.com/ij-plugins/ijp-toolkit.git</connection>
-  </scm>
-    <developers>
-      <developer>
-        <id>jpsacha</id>
-        <name>Jarek Sacha</name>
-        <url>https://github.com/jpsacha</url>
-      </developer>
-    </developers>
