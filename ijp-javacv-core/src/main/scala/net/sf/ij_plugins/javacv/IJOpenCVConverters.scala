@@ -1,33 +1,18 @@
 /*
- * Image/J Plugins
- * Copyright (C) 2002-2021 Jarek Sacha
- * Author's email: jpsacha at gmail dot com
+ * Copyright (c) 2011-2021 Jarek Sacha. All Rights Reserved.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Latest release available at http://sourceforge.net/projects/ij-plugins/
+ * Author's e-mail: jpsacha at gmail.com
  */
 
 package net.sf.ij_plugins.javacv
 
 import ij.process._
 import ij.{ImagePlus, ImageStack}
-import org.bytedeco.javacv.OpenCVFrameConverter
+import org.bytedeco.javacv.{Frame, OpenCVFrameConverter}
 import org.bytedeco.opencv.opencv_core._
 
 import java.awt.image._
+import scala.util.Using
 
 /**
  * Converts between OpenCV and ImageJ data representations
@@ -43,9 +28,11 @@ object IJOpenCVConverters {
    * @param image input image.
    */
   def toImageProcessor(image: Mat): ImageProcessor = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    val frame = converter.convert(image)
-    new ImageProcessorFrameConverter().convert(frame)
+    Using.resource(new OpenCVFrameConverter.ToMat()) { converter =>
+      Using.resource(converter.convert(image)) { frame =>
+        new ImageProcessorFrameConverter().convert(frame)
+      }
+    }
   }
 
 
@@ -68,9 +55,11 @@ object IJOpenCVConverters {
    * @param image input image.
    */
   def toImagePlus(image: Mat): ImagePlus = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    val frame = converter.convert(image)
-    new ImagePlusFrameConverter().convert(frame)
+    Using.resource(new OpenCVFrameConverter.ToMat()) { converter =>
+      Using.resource(converter.convert(image)) { frame =>
+        new ImagePlusFrameConverter().convert(frame)
+      }
+    }
   }
 
 
@@ -168,11 +157,9 @@ object IJOpenCVConverters {
   /** Convert `ImageProcessor` to `Mat`. */
   def toMat(src: ImageProcessor): Mat = {
     require(src != null)
-    val frame = new ImageProcessorFrameConverter().convert(src)
-    val converter = new OpenCVFrameConverter.ToMat()
-    // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
-    //   see https://github.com/bytedeco/javacpp-presets/issues/979
-    converter.convert(frame).clone()
+    Using.resource(new ImageProcessorFrameConverter().convert(src)) { frame =>
+      toMat(frame)
+    }
   }
 
 
@@ -189,12 +176,19 @@ object IJOpenCVConverters {
   /** Convert `ImagePlus` to `Mat`. If there re multiple slices they will be converted to channels. */
   def toMat(src: ImagePlus): Mat = {
     require(src != null)
+    Using.resource(new ImagePlusFrameConverter().convert(src)) { frame =>
+      toMat(frame)
+    }
+  }
 
-    val frame = new ImagePlusFrameConverter().convert(src)
-    val converter = new OpenCVFrameConverter.ToMat()
-    // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
-    //   see https://github.com/bytedeco/javacpp-presets/issues/979
-    converter.convert(frame).clone()
+
+  private def toMat(frame: Frame): Mat = {
+    Using.resource(new OpenCVFrameConverter.ToMat()) { converter =>
+      // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
+      //   see https://github.com/bytedeco/javacpp-presets/issues/979
+      val mat = converter.convert(frame)
+      mat.clone()
+    }
   }
 
 
