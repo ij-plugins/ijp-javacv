@@ -29,6 +29,8 @@ import org.bytedeco.javacv.{Frame, Java2DFrameConverter, OpenCVFrameConverter}
 import org.bytedeco.opencv.global.opencv_core._
 import org.bytedeco.opencv.opencv_core.{Mat, Scalar}
 
+import scala.util.Using
+
 
 object ConverterBenchmarkApp extends App {
 
@@ -58,21 +60,26 @@ object ConverterBenchmarkApp extends App {
 
 
   def covertToFrame(mat: Mat): Frame = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    converter.convert(mat)
+    Using.resource(new OpenCVFrameConverter.ToMat()) { converter =>
+      converter.convert(mat)
+    }
   }
 
   def convertUsingJava2DFrame(mat: Mat): ImageProcessor = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    val frame = converter.convert(mat)
-    val bi = new Java2DFrameConverter().convert(frame)
-    toImageProcessor(bi)
+    Using.resource(new OpenCVFrameConverter.ToMat()) { converter =>
+      Using.resources(converter.convert(mat), new Java2DFrameConverter()) { (frame, converter) =>
+        val bi = converter.convert(frame)
+        toImageProcessor(bi)
+      }
+    }
   }
 
   def convertUsingIJFrame(mat: Mat): ImageProcessor = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    val frame = converter.convert(mat)
-    new ImageProcessorFrameConverter().convert(frame)
+    Using.resource(new OpenCVFrameConverter.ToMat()) { converter =>
+      Using.resource(converter.convert(mat)) { frame =>
+        new ImageProcessorFrameConverter().convert(frame)
+      }
+    }
   }
 
 }

@@ -30,6 +30,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import java.io.File
+import scala.util.Using
 
 class ImagePlusFrameConverterTest extends AnyFlatSpec {
 
@@ -87,31 +88,35 @@ class ImagePlusFrameConverterTest extends AnyFlatSpec {
     val srcMat = loadMulti(srcFile)
     srcMat should not be (null)
 
-    val openCVConverter = new OpenCVFrameConverter.ToMat()
-    val srcFrame = openCVConverter.convert(srcMat)
-    srcFrame should not be (null)
+    Using.resource(new OpenCVFrameConverter.ToMat()) { openCVConverter =>
+      Using.resource(openCVConverter.convert(srcMat)) { srcFrame =>
 
-    val converter = new ImagePlusFrameConverter()
-    val dstImp = converter.convert(srcFrame)
-    dstImp should not be (null)
+        srcFrame should not be (null)
 
-    dstImp.getType should be(ImagePlus.GRAY8)
-    dstImp.getWidth should be(186)
-    dstImp.getHeight should be(226)
-    dstImp.getStackSize should be(27)
+        val converter = new ImagePlusFrameConverter()
+        val dstImp = converter.convert(srcFrame)
+        dstImp should not be (null)
 
-    // Read using ImageJ so we can compare conversion
-    val srcImp = IJ.openImage(srcFile.getCanonicalPath)
-    // Sanity checks
-    srcImp should not be (null)
-    srcImp.getWidth should be(186)
-    srcImp.getHeight should be(226)
-    srcImp.getStackSize should be(27)
+        dstImp.getType should be(ImagePlus.GRAY8)
+        dstImp.getWidth should be(186)
+        dstImp.getHeight should be(226)
+        dstImp.getStackSize should be(27)
 
-    val srcImageArray = srcImp.getStack.getImageArray
-    val dstImageArray = dstImp.getStack.getImageArray
-    for (i <- 0 until srcImp.getStackSize) {
-      srcImageArray(i) should be(dstImageArray(i))
+        // Read using ImageJ so we can compare conversion
+        val srcImp = IJ.openImage(srcFile.getCanonicalPath)
+        // Sanity checks
+        srcImp should not be (null)
+        srcImp.getWidth should be(186)
+        srcImp.getHeight should be(226)
+        srcImp.getStackSize should be(27)
+
+        val srcImageArray = srcImp.getStack.getImageArray
+        val dstImageArray = dstImp.getStack.getImageArray
+        for (i <- 0 until srcImp.getStackSize) {
+          srcImageArray(i) should be(dstImageArray(i))
+        }
+      }
     }
+
   }
 }

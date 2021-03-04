@@ -24,9 +24,8 @@ package net.sf.ij_plugins.javacv.imgproc
 
 import ij.io.OpenDialog
 import ij.plugin.PlugIn
-import net.sf.ij_plugins.javacv.ImagePlusFrameConverter
+import net.sf.ij_plugins.javacv.IJOpenCVConverters
 import net.sf.ij_plugins.javacv.util.OpenCVUtils
-import org.bytedeco.javacv.OpenCVFrameConverter
 import org.bytedeco.opencv.global.opencv_core.merge
 import org.bytedeco.opencv.global.opencv_imgcodecs.{IMREAD_UNCHANGED, imreadmulti}
 import org.bytedeco.opencv.opencv_core.{Mat, MatVector}
@@ -53,8 +52,7 @@ class OpenWithOpenCVPlugIn extends PlugIn {
 
     OpenCVUtils.printInfo(mat)
 
-    val frame = new OpenCVFrameConverter.ToMat().convert(mat)
-    val imp = new ImagePlusFrameConverter().convert(frame)
+    val imp = IJOpenCVConverters.toImagePlus(mat)
     imp.setTitle(file.getName)
     imp.show()
   }

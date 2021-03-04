@@ -27,8 +27,7 @@ import ij.gui.{Overlay, ShapeRoi}
 import ij.process.ColorProcessor
 import org.bytedeco.javacpp.DoublePointer
 import org.bytedeco.javacpp.indexer.{DoubleIndexer, FloatIndexer}
-import org.bytedeco.javacv.OpenCVFrameConverter.ToMat
-import org.bytedeco.javacv.{CanvasFrame, Java2DFrameConverter}
+import org.bytedeco.javacv.{CanvasFrame, Java2DFrameConverter, OpenCVFrameConverter}
 import org.bytedeco.opencv.global.opencv_core._
 import org.bytedeco.opencv.global.opencv_imgcodecs._
 import org.bytedeco.opencv.global.opencv_imgproc._
@@ -40,6 +39,7 @@ import java.awt.image.BufferedImage
 import java.io.{File, IOException}
 import javax.swing.WindowConstants
 import scala.math.round
+import scala.util.Using
 
 
 /** Helper methods that simplify use of OpenCV API. */
@@ -173,10 +173,9 @@ object OpenCVUtils {
 
   /** Show image in a window. Closing the window will exit the application. */
   def show(mat: Mat, title: String): Unit = {
-    val converter = new ToMat()
     val canvas = new CanvasFrame(title, 1)
     canvas.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
-    canvas.showImage(converter.convert(mat))
+    canvas.showImage(toBufferedImage(mat))
   }
 
   /** Show image in a window. Closing the window will exit the application. */
@@ -269,9 +268,9 @@ object OpenCVUtils {
   }
 
   def toBufferedImage(mat: Mat): BufferedImage = {
-    val openCVConverter = new ToMat()
-    val java2DConverter = new Java2DFrameConverter()
-    java2DConverter.convert(openCVConverter.convert(mat))
+    Using.resources(new OpenCVFrameConverter.ToMat(), new Java2DFrameConverter()) { (openCVCvt, java2DCvt) =>
+      java2DCvt.convert(openCVCvt.convert(mat))
+    }
   }
 
   def toDMatchVector(src: Seq[DMatch]): DMatchVector = {
