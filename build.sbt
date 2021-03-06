@@ -4,7 +4,7 @@ import xerial.sbt.Sonatype.GitHubHosting
 // @formatter:off
 
 lazy val _version       = "0.3.2.0-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.4", "2.12.13")
+lazy val _scalaVersions = Seq("2.13.5", "2.12.13")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name         := "ijp-javacv"
@@ -37,11 +37,11 @@ val commonSettings = Seq(
     "org.bytedeco"   % "opencv"     % "4.5.1-1.5.5-SNAPSHOT" classifier platform,
     "org.bytedeco"   % "openblas"   % "0.3.13-1.5.5-SNAPSHOT" withSources() withJavadoc(),
     "org.bytedeco"   % "openblas"   % "0.3.13-1.5.5-SNAPSHOT" classifier platform,
-    "net.imagej"     % "ij"         % "1.53g",
+    "net.imagej"     % "ij"         % "1.53h",
 //    "com.beachape"  %% "enumeratum" % "1.5.13",
 //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest"  % "3.2.3"  % "test",
+    "org.scalatest" %% "scalatest"  % "3.2.5"  % "test",
   ),
   scalacOptions in(Compile, doc) ++= Opts.doc.title("IJP JavaCV API"),
   scalacOptions in(Compile, doc) ++= Opts.doc.version(_version),
