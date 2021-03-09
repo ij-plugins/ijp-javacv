@@ -89,7 +89,7 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     frame.imageDepth match {
       case Frame.DEPTH_UBYTE => frame.imageChannels match {
         case 3 => toRGB(frame)
-        case n => toGRAY8(frame)
+        case _ => toGRAY8(frame)
       }
       case Frame.DEPTH_USHORT => toGRAY16(frame)
       case Frame.DEPTH_FLOAT => toGRAY32(frame)
