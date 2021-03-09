@@ -59,11 +59,11 @@ object IJPUtils {
   }
 
   /**
-   * Create pane for displaying a message that may contain HTLM formatting, including links.
+   * Create pane for displaying a message that may contain HTML formatting, including links.
    *
    * @param message the message.
-   * @param  title  used in error dialogs.
-   * @return component containg the message.
+   * @param title   used in error dialogs.
+   * @return component containing the message.
    */
   def createHTMLMessageComponent(message: String, title: String): JComponent = {
     val pane = new JEditorPane()
@@ -92,7 +92,7 @@ object IJPUtils {
   }
 
   /**
-   * Creeate simple info panel for a plugin dialog. Intended to be displayed at the top.
+   * Create simple info panel for a plugin dialog. Intended to be displayed at the top.
    *
    * @param title   title displayed in bold font larger than default.
    * @param message message that can contain HTML formatting.

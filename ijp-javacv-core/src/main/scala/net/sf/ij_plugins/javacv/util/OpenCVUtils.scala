@@ -27,8 +27,7 @@ import ij.gui.{Overlay, ShapeRoi}
 import ij.process.ColorProcessor
 import org.bytedeco.javacpp.DoublePointer
 import org.bytedeco.javacpp.indexer.{DoubleIndexer, FloatIndexer}
-import org.bytedeco.javacv.OpenCVFrameConverter.ToMat
-import org.bytedeco.javacv.{CanvasFrame, Java2DFrameConverter}
+import org.bytedeco.javacv.{CanvasFrame, Java2DFrameConverter, OpenCVFrameConverter}
 import org.bytedeco.opencv.global.opencv_core._
 import org.bytedeco.opencv.global.opencv_imgcodecs._
 import org.bytedeco.opencv.global.opencv_imgproc._
@@ -40,6 +39,7 @@ import java.awt.image.BufferedImage
 import java.io.{File, IOException}
 import javax.swing.WindowConstants
 import scala.math.round
+import scala.util.Using
 
 
 /** Helper methods that simplify use of OpenCV API. */
@@ -95,7 +95,7 @@ object OpenCVUtils {
   def loadMulti(file: File): Mat = {
     // Read input image
     val matV = new MatVector()
-    val ok = imreadmulti(file.getAbsolutePath, matV, IMREAD_UNCHANGED)
+    val ok   = imreadmulti(file.getAbsolutePath, matV, IMREAD_UNCHANGED)
     if (!ok) {
       throw new IOException("Couldn't load image: " + file.getAbsolutePath)
     }
@@ -173,10 +173,9 @@ object OpenCVUtils {
 
   /** Show image in a window. Closing the window will exit the application. */
   def show(mat: Mat, title: String): Unit = {
-    val converter = new ToMat()
     val canvas = new CanvasFrame(title, 1)
     canvas.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
-    canvas.showImage(converter.convert(mat))
+    canvas.showImage(toBufferedImage(mat))
   }
 
   /** Show image in a window. Closing the window will exit the application. */
@@ -189,9 +188,9 @@ object OpenCVUtils {
 
   /** Draw red circles at point locations on an image. */
   def drawOnImage(image: Mat, points: Point2fVector): Mat = {
-    val dest = image.clone()
+    val dest   = image.clone()
     val radius = 5
-    val red = new Scalar(0, 0, 255, 0)
+    val red    = new Scalar(0, 0, 255, 0)
     for (i <- 0 until points.size.toInt) {
       val p = points.get(i)
       circle(dest, new Point(round(p.x), round(p.y)), radius, red)
@@ -233,8 +232,10 @@ object OpenCVUtils {
    */
   def toArray(keyPoints: KeyPoint): Array[KeyPoint] = {
     val oldPosition = keyPoints.position()
+
     // Convert keyPoints to Scala sequence
     val points = for (i <- Array.range(0, keyPoints.capacity.toInt)) yield new KeyPoint(keyPoints.position(i))
+
     // Reset position explicitly to avoid issues from other uses of this position-based container.
     keyPoints.position(oldPosition)
 
@@ -269,9 +270,12 @@ object OpenCVUtils {
   }
 
   def toBufferedImage(mat: Mat): BufferedImage = {
-    val openCVConverter = new ToMat()
-    val java2DConverter = new Java2DFrameConverter()
-    java2DConverter.convert(openCVConverter.convert(mat))
+    Using.Manager { use =>
+      val openCVCvt = use(new OpenCVFrameConverter.ToMat())
+      val frame     = use(openCVCvt.convert(mat))
+      val java2DCvt = use(new Java2DFrameConverter())
+      java2DCvt.convert(frame)
+    }.get
   }
 
   def toDMatchVector(src: Seq[DMatch]): DMatchVector = {
@@ -299,6 +303,7 @@ object OpenCVUtils {
 
     val min = minVal.get()
     val max = maxVal.get()
+
     val (scale, offset) = if (doScaling) {
       val s = 255d / (max - min)
       (s, -min * s)
@@ -343,8 +348,8 @@ object OpenCVUtils {
     require(mat.checkVector(2) >= 0, "Expecting a vector Mat")
 
     val indexer = mat.createIndexer().asInstanceOf[FloatIndexer]
-    val size = mat.total.toInt
-    val dest = new Array[Point2f](size)
+    val size    = mat.total.toInt
+    val dest    = new Array[Point2f](size)
 
     for (i <- 0 until size) dest(i) = new Point2f(indexer.get(0, i, 0), indexer.get(0, i, 1))
     dest
@@ -354,7 +359,7 @@ object OpenCVUtils {
   def toPoint2fVectorPair(matches: DMatchVector, keyPoints1: KeyPointVector, keyPoints2: KeyPointVector): (Point2fVector, Point2fVector) = {
 
     // Extract keypoints from each match, separate Left and Right
-    val size = matches.size.toInt
+    val size          = matches.size.toInt
     val pointIndexes1 = new Array[Int](size)
     val pointIndexes2 = new Array[Int](size)
     for (i <- 0 until size) {
@@ -378,8 +383,8 @@ object OpenCVUtils {
     // Create Mat representing a vector of Points3f
     val size: Int = points.size.toInt
     // Argument to Mat constructor must be `Int` to mean sizes, otherwise it may be interpreted as content.
-    val dest = new Mat(1, size, CV_32FC2)
-    val indx = dest.createIndexer().asInstanceOf[FloatIndexer]
+    val dest      = new Mat(1, size, CV_32FC2)
+    val indx      = dest.createIndexer().asInstanceOf[FloatIndexer]
     for (i <- 0 until size) {
       val p = points.get(i)
       indx.put(0, i, 0, p.x)
@@ -413,13 +418,13 @@ object OpenCVUtils {
         s"  type:     ${mat.`type`}\n" +
         s"  dims:     ${mat.dims}\n" +
         s"  total:    ${mat.total}\n"
-    )
+      )
   }
 
   def homographyToAffineTransform(homography: Mat): AffineTransform = {
     // TODO: validate that matrix is a homography
     val hIndexer = homography.createIndexer().asInstanceOf[DoubleIndexer]
-    val afm = new Array[Double](6)
+    val afm      = new Array[Double](6)
     afm(0) = hIndexer.get(0)
     afm(1) = hIndexer.get(3)
     afm(2) = hIndexer.get(1)
@@ -432,7 +437,7 @@ object OpenCVUtils {
 
   def affineTransformToHomography(t: AffineTransform): Mat = {
     val homography = new Mat(3, 3, CV_64F)
-    val hIndexer = homography.createIndexer().asInstanceOf[DoubleIndexer]
+    val hIndexer   = homography.createIndexer().asInstanceOf[DoubleIndexer]
 
     val afm = new Array[Double](6)
     t.getMatrix(afm)
@@ -493,9 +498,9 @@ object OpenCVUtils {
    * @return deep copy of the source
    */
   def deepCopy(bi: BufferedImage): BufferedImage = {
-    val cm = bi.getColorModel
+    val cm                   = bi.getColorModel
     val isAlphaPremultiplied = cm.isAlphaPremultiplied
-    val raster = bi.copyData(null)
+    val raster               = bi.copyData(null)
     new BufferedImage(cm, raster, isAlphaPremultiplied, null)
   }
 }

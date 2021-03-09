@@ -30,38 +30,39 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import java.io.File
+import scala.util.Using
 
 class ImagePlusFrameConverterTest extends AnyFlatSpec {
 
   it should "convert GRAY8 to Frame" in {
 
-    val bp = new ByteProcessor(13, 17)
+    val bp  = new ByteProcessor(13, 17)
     val imp = new ImagePlus("", bp)
 
     val converter = new ImagePlusFrameConverter()
 
-    val frame = converter.convert(imp)
-
-    frame.imageDepth should be(Frame.DEPTH_UBYTE)
-    frame.imageWidth should be(13)
-    frame.imageHeight should be(17)
-    frame.imageChannels should be(1)
+    Using(converter.convert(imp)) { frame =>
+      frame.imageDepth should be(Frame.DEPTH_UBYTE)
+      frame.imageWidth should be(13)
+      frame.imageHeight should be(17)
+      frame.imageChannels should be(1)
+    }.get
   }
 
 
   it should "convert RGB to Frame" in {
 
-    val cp = new ColorProcessor(13, 17)
+    val cp  = new ColorProcessor(13, 17)
     val imp = new ImagePlus("", cp)
 
     val converter = new ImagePlusFrameConverter()
 
-    val frame = converter.convert(imp)
-
-    frame.imageDepth should be(Frame.DEPTH_UBYTE)
-    frame.imageWidth should be(13)
-    frame.imageHeight should be(17)
-    frame.imageChannels should be(3)
+    Using(converter.convert(imp)) { frame =>
+      frame.imageDepth should be(Frame.DEPTH_UBYTE)
+      frame.imageWidth should be(13)
+      frame.imageHeight should be(17)
+      frame.imageChannels should be(3)
+    }.get
   }
 
 
@@ -87,31 +88,34 @@ class ImagePlusFrameConverterTest extends AnyFlatSpec {
     val srcMat = loadMulti(srcFile)
     srcMat should not be (null)
 
-    val openCVConverter = new OpenCVFrameConverter.ToMat()
-    val srcFrame = openCVConverter.convert(srcMat)
-    srcFrame should not be (null)
+    Using.Manager { use =>
+      val openCVConverter = use(new OpenCVFrameConverter.ToMat())
+      val srcFrame        = use(openCVConverter.convert(srcMat))
 
-    val converter = new ImagePlusFrameConverter()
-    val dstImp = converter.convert(srcFrame)
-    dstImp should not be (null)
+      srcFrame should not be (null)
 
-    dstImp.getType should be(ImagePlus.GRAY8)
-    dstImp.getWidth should be(186)
-    dstImp.getHeight should be(226)
-    dstImp.getStackSize should be(27)
+      val converter = new ImagePlusFrameConverter()
+      val dstImp    = converter.convert(srcFrame)
+      dstImp should not be (null)
 
-    // Read using ImageJ so we can compare conversion
-    val srcImp = IJ.openImage(srcFile.getCanonicalPath)
-    // Sanity checks
-    srcImp should not be (null)
-    srcImp.getWidth should be(186)
-    srcImp.getHeight should be(226)
-    srcImp.getStackSize should be(27)
+      dstImp.getType should be(ImagePlus.GRAY8)
+      dstImp.getWidth should be(186)
+      dstImp.getHeight should be(226)
+      dstImp.getStackSize should be(27)
 
-    val srcImageArray = srcImp.getStack.getImageArray
-    val dstImageArray = dstImp.getStack.getImageArray
-    for (i <- 0 until srcImp.getStackSize) {
-      srcImageArray(i) should be(dstImageArray(i))
-    }
+      // Read using ImageJ so we can compare conversion
+      val srcImp = IJ.openImage(srcFile.getCanonicalPath)
+      // Sanity checks
+      srcImp should not be (null)
+      srcImp.getWidth should be(186)
+      srcImp.getHeight should be(226)
+      srcImp.getStackSize should be(27)
+
+      val srcImageArray = srcImp.getStack.getImageArray
+      val dstImageArray = dstImp.getStack.getImageArray
+      for (i <- 0 until srcImp.getStackSize) {
+        srcImageArray(i) should be(dstImageArray(i))
+      }
+    }.get
   }
 }

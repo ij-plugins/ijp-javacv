@@ -27,6 +27,8 @@ import org.bytedeco.javacv.Frame
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
+import scala.util.Using
+
 class ImageProcessorFrameConverterTest extends AnyFlatSpec {
 
 
@@ -35,12 +37,13 @@ class ImageProcessorFrameConverterTest extends AnyFlatSpec {
 
     val converter = new ImageProcessorFrameConverter()
 
-    val frame = converter.convert(bp)
+    Using(converter.convert(bp)) { frame =>
 
-    frame.imageDepth should be(Frame.DEPTH_UBYTE)
-    frame.imageWidth should be(13)
-    frame.imageHeight should be(17)
-    frame.imageChannels should be(1)
+      frame.imageDepth should be(Frame.DEPTH_UBYTE)
+      frame.imageWidth should be(13)
+      frame.imageHeight should be(17)
+      frame.imageChannels should be(1)
+    }.get
   }
 
   it should "convert RGB to Frame" in {
@@ -48,12 +51,13 @@ class ImageProcessorFrameConverterTest extends AnyFlatSpec {
 
     val converter = new ImageProcessorFrameConverter()
 
-    val frame = converter.convert(cp)
+    Using(converter.convert(cp)) { frame =>
 
-    frame.imageDepth should be(Frame.DEPTH_UBYTE)
-    frame.imageWidth should be(13)
-    frame.imageHeight should be(17)
-    frame.imageChannels should be(3)
+      frame.imageDepth should be(Frame.DEPTH_UBYTE)
+      frame.imageWidth should be(13)
+      frame.imageHeight should be(17)
+      frame.imageChannels should be(3)
+    }.get
   }
 
   //  it should "convert RGB to Frame from disk" in {

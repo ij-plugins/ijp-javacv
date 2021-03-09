@@ -24,10 +24,11 @@ package net.sf.ij_plugins.javacv
 
 import ij.process._
 import ij.{ImagePlus, ImageStack}
-import org.bytedeco.javacv.OpenCVFrameConverter
+import org.bytedeco.javacv.{Frame, OpenCVFrameConverter}
 import org.bytedeco.opencv.opencv_core._
 
 import java.awt.image._
+import scala.util.Using
 
 /**
  * Converts between OpenCV and ImageJ data representations
@@ -43,9 +44,11 @@ object IJOpenCVConverters {
    * @param image input image.
    */
   def toImageProcessor(image: Mat): ImageProcessor = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    val frame = converter.convert(image)
-    new ImageProcessorFrameConverter().convert(frame)
+    Using.Manager { use =>
+      val converter = use(new OpenCVFrameConverter.ToMat())
+      val frame     = use(converter.convert(image))
+      new ImageProcessorFrameConverter().convert(frame)
+    }.get
   }
 
 
@@ -68,9 +71,11 @@ object IJOpenCVConverters {
    * @param image input image.
    */
   def toImagePlus(image: Mat): ImagePlus = {
-    val converter = new OpenCVFrameConverter.ToMat()
-    val frame = converter.convert(image)
-    new ImagePlusFrameConverter().convert(frame)
+    Using.Manager { use =>
+      val converter = use(new OpenCVFrameConverter.ToMat())
+      val frame     = use(converter.convert(image))
+      new ImagePlusFrameConverter().convert(frame)
+    }.get
   }
 
 
@@ -86,7 +91,7 @@ object IJOpenCVConverters {
         val dest = new BufferedImage(ip.getWidth, ip.getHeight, BufferedImage.TYPE_3BYTE_BGR)
         // Easiest way to transfer the data is to draw the input image on the output image,
         // This handles all needed color representation conversions, since both are variants of
-        val g = dest.getGraphics
+        val g    = dest.getGraphics
         g.drawImage(ip.getBufferedImage, 0, 0, null)
         dest
       case _ => throw new IllegalArgumentException("Unsupported ImageProcessor type: " + ip.getClass)
@@ -104,10 +109,10 @@ object IJOpenCVConverters {
    * @throws IllegalArgumentException when enable to create ImagePlus.
    */
   def toImageProcessor(image: BufferedImage): ImageProcessor = {
-    val raster = image.getRaster
+    val raster     = image.getRaster
     val colorModel = image.getColorModel
     val dataBuffer = raster.getDataBuffer
-    val numBanks = dataBuffer.getNumBanks
+    val numBanks   = dataBuffer.getNumBanks
     if (numBanks > 1 && colorModel == null) {
       throw new IllegalArgumentException("Don't know what to do with image with no color model and multiple banks.")
     }
@@ -118,14 +123,14 @@ object IJOpenCVConverters {
       new ColorProcessor(bi)
     } else if (sampleModel.getSampleSize(0) < 8) {
       val bi = new BufferedImage(colorModel, raster, false, null)
-      val w = image.getWidth
-      val h = image.getHeight
+      val w  = image.getWidth
+      val h  = image.getHeight
       bi.getType match {
         case BufferedImage.TYPE_BYTE_GRAY => new ByteProcessor(bi)
         case BufferedImage.TYPE_BYTE_BINARY =>
-          val bp = new ByteProcessor(w, h)
+          val bp   = new ByteProcessor(w, h)
           val data = bi.getData
-          val p = Array(0)
+          val p    = Array(0)
           for (y <- 0 until h; x <- 0 until w) {
             data.getPixel(x, y, p)
             bp.set(x, y, p(0))
@@ -168,11 +173,9 @@ object IJOpenCVConverters {
   /** Convert `ImageProcessor` to `Mat`. */
   def toMat(src: ImageProcessor): Mat = {
     require(src != null)
-    val frame = new ImageProcessorFrameConverter().convert(src)
-    val converter = new OpenCVFrameConverter.ToMat()
-    // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
-    //   see https://github.com/bytedeco/javacpp-presets/issues/979
-    converter.convert(frame).clone()
+    Using(new ImageProcessorFrameConverter().convert(src)) { frame =>
+      toMat(frame)
+    }.get
   }
 
 
@@ -189,12 +192,19 @@ object IJOpenCVConverters {
   /** Convert `ImagePlus` to `Mat`. If there re multiple slices they will be converted to channels. */
   def toMat(src: ImagePlus): Mat = {
     require(src != null)
+    Using(new ImagePlusFrameConverter().convert(src)) { frame =>
+      toMat(frame)
+    }.get
+  }
 
-    val frame = new ImagePlusFrameConverter().convert(src)
-    val converter = new OpenCVFrameConverter.ToMat()
-    // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
-    //   see https://github.com/bytedeco/javacpp-presets/issues/979
-    converter.convert(frame).clone()
+
+  private def toMat(frame: Frame): Mat = {
+    Using(new OpenCVFrameConverter.ToMat()) { converter =>
+      // Converted returns reference to internal `mat` wrapper, it may get deallocated when it gets out of scope
+      //   see https://github.com/bytedeco/javacpp-presets/issues/979
+      val mat = converter.convert(frame)
+      mat.clone()
+    }.get
   }
 
 
