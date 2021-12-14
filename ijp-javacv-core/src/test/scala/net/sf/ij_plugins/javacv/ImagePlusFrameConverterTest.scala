@@ -27,7 +27,7 @@ import ij.{IJ, ImagePlus}
 import net.sf.ij_plugins.javacv.util.OpenCVUtils.loadMulti
 import org.bytedeco.javacv.{Frame, OpenCVFrameConverter}
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers._
+import org.scalatest.matchers.should.Matchers.*
 
 import java.io.File
 import scala.util.Using
@@ -49,7 +49,6 @@ class ImagePlusFrameConverterTest extends AnyFlatSpec {
     }.get
   }
 
-
   it should "convert RGB to Frame" in {
 
     val cp  = new ColorProcessor(13, 17)
@@ -65,7 +64,6 @@ class ImagePlusFrameConverterTest extends AnyFlatSpec {
     }.get
   }
 
-
   it should "convert Frame to GRAY8" in {
 
     val frame = new Frame(13, 17, Frame.DEPTH_UBYTE, 1)
@@ -79,7 +77,6 @@ class ImagePlusFrameConverterTest extends AnyFlatSpec {
     imp.getHeight should be(17)
     imp.getStackSize should be(1)
   }
-
 
   it should "convert Frame to GRAY8 Stack (from disk)" in {
     val srcFile = new File("../test/data/mri-stack_c.tif").getCanonicalFile

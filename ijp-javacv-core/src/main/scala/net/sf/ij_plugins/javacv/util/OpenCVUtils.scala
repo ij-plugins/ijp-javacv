@@ -28,12 +28,12 @@ import ij.process.ColorProcessor
 import org.bytedeco.javacpp.DoublePointer
 import org.bytedeco.javacpp.indexer.{DoubleIndexer, FloatIndexer}
 import org.bytedeco.javacv.{CanvasFrame, Java2DFrameConverter, OpenCVFrameConverter}
-import org.bytedeco.opencv.global.opencv_core._
-import org.bytedeco.opencv.global.opencv_imgcodecs._
-import org.bytedeco.opencv.global.opencv_imgproc._
-import org.bytedeco.opencv.opencv_core.{Point, _}
+import org.bytedeco.opencv.global.opencv_core.*
+import org.bytedeco.opencv.global.opencv_imgcodecs.*
+import org.bytedeco.opencv.global.opencv_imgproc.*
+import org.bytedeco.opencv.opencv_core.{Point, *}
 
-import java.awt._
+import java.awt.*
 import java.awt.geom.{AffineTransform, Ellipse2D, Point2D}
 import java.awt.image.BufferedImage
 import java.io.{File, IOException}
@@ -41,9 +41,9 @@ import javax.swing.WindowConstants
 import scala.math.round
 import scala.util.Using
 
-
 /** Helper methods that simplify use of OpenCV API. */
 object OpenCVUtils {
+
   /**
    * Initialize loading of OpenCV libraries. Generally those libraries are loaded automatically,
    * but in some situations it may not happen.
@@ -61,8 +61,8 @@ object OpenCVUtils {
    */
   def initJavaCV(): String = CV_VERSION
 
-
-  /** Load an image.
+  /**
+   * Load an image.
    *
    * @param flags Flags specifying the color type of a loaded image:
    *              <ul>
@@ -85,7 +85,6 @@ object OpenCVUtils {
     image
   }
 
-
   /**
    * Assume that image may contain multiple pages (slices). It is using OpenCV `imreadmulti` internally.
    *
@@ -105,7 +104,8 @@ object OpenCVUtils {
     mat
   }
 
-  /** Load an image and show in a CanvasFrame.
+  /**
+   * Load an image and show in a CanvasFrame.
    *
    * @param flags Flags specifying the color type of a loaded image:
    *              <ul>
@@ -126,7 +126,8 @@ object OpenCVUtils {
     image
   }
 
-  /** Load an image and show in a CanvasFrame. If image cannot be loaded the application will exit with code 1.
+  /**
+   * Load an image and show in a CanvasFrame. If image cannot be loaded the application will exit with code 1.
    *
    * @param flags Flags specifying the color type of a loaded image:
    *              <ul>
@@ -146,7 +147,8 @@ object OpenCVUtils {
     image
   }
 
-  /** Load an image. If image cannot be loaded the application will exit with code 1.
+  /**
+   * Load an image. If image cannot be loaded the application will exit with code 1.
    *
    * @param flags Flags specifying the color type of a loaded image:
    *              <ul>
@@ -161,13 +163,14 @@ object OpenCVUtils {
    */
   def loadOrExit(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
     // Read input image
-    val image = try {
-      load(file, flags)
-    } catch {
-      case t: IOException =>
-        println(t.getMessage)
-        sys.exit(1)
-    }
+    val image =
+      try {
+        load(file, flags)
+      } catch {
+        case t: IOException =>
+          println(t.getMessage)
+          sys.exit(1)
+      }
     image
   }
 
@@ -185,7 +188,6 @@ object OpenCVUtils {
     canvas.showImage(image)
   }
 
-
   /** Draw red circles at point locations on an image. */
   def drawOnImage(image: Mat, points: Point2fVector): Mat = {
     val dest   = image.clone()
@@ -199,7 +201,8 @@ object OpenCVUtils {
     dest
   }
 
-  /** Draw a shape on an image.
+  /**
+   * Draw a shape on an image.
    *
    * @param image   input image
    * @param overlay shape to draw
@@ -212,7 +215,8 @@ object OpenCVUtils {
     dest
   }
 
-  /** Save the image to the specified file.
+  /**
+   * Save the image to the specified file.
    *
    * The image format is chosen based on the filename extension (see `imread()` in OpenCV documentation for the list of extensions).
    * Only 8-bit (or 16-bit in case of PNG, JPEG 2000, and TIFF) single-channel or
@@ -221,12 +225,17 @@ object OpenCVUtils {
    *
    * @param file  file to save to. File name extension decides output image format.
    * @param image image to save.
+   * @throws IOException if image cannot be saved
    */
   def save(file: File, image: Mat): Unit = {
-    imwrite(file.getAbsolutePath, image)
+    val ok = imwrite(file.getAbsolutePath, image)
+    if (!ok) {
+      throw new IOException("Couldn't save image: " + file.getAbsolutePath)
+    }
   }
 
-  /** Convert native vector to JVM array.
+  /**
+   * Convert native vector to JVM array.
    *
    * @param keyPoints pointer to a native vector containing KeyPoints.
    */
@@ -242,7 +251,8 @@ object OpenCVUtils {
     points
   }
 
-  /** Convert native vector to JVM array.
+  /**
+   * Convert native vector to JVM array.
    *
    * @param keyPoints pointer to a native vector containing KeyPoints.
    */
@@ -255,7 +265,8 @@ object OpenCVUtils {
     for (i <- Array.range(0, n)) yield new KeyPoint(keyPoints.get(i))
   }
 
-  /** Convert native vector to JVM array.
+  /**
+   * Convert native vector to JVM array.
    *
    * @param matches pointer to a native vector containing DMatches.
    * @return
@@ -288,7 +299,6 @@ object OpenCVUtils {
 
   def toPoint(p: Point2f): Point = new Point(round(p.x), round(p.y))
 
-
   /**
    * Convert `Mat` to one where pixels are represented as 8 bit unsigned integers (`CV_8U`).
    * It creates a copy of the input image.
@@ -304,10 +314,11 @@ object OpenCVUtils {
     val min = minVal.get()
     val max = maxVal.get()
 
-    val (scale, offset) = if (doScaling) {
-      val s = 255d / (max - min)
-      (s, -min * s)
-    } else (1d, 0d)
+    val (scale, offset) =
+      if (doScaling) {
+        val s = 255d / (max - min)
+        (s, -min * s)
+      } else (1d, 0d)
 
     val dest = new Mat()
     src.convertTo(dest, CV_8U, scale, offset)
@@ -356,7 +367,11 @@ object OpenCVUtils {
   }
 
   /** Convert from KeyPoint to Point2D32f representation */
-  def toPoint2fVectorPair(matches: DMatchVector, keyPoints1: KeyPointVector, keyPoints2: KeyPointVector): (Point2fVector, Point2fVector) = {
+  def toPoint2fVectorPair(
+    matches: DMatchVector,
+    keyPoints1: KeyPointVector,
+    keyPoints2: KeyPointVector
+  ): (Point2fVector, Point2fVector) = {
 
     // Extract keypoints from each match, separate Left and Right
     val size          = matches.size.toInt
@@ -383,8 +398,8 @@ object OpenCVUtils {
     // Create Mat representing a vector of Points3f
     val size: Int = points.size.toInt
     // Argument to Mat constructor must be `Int` to mean sizes, otherwise it may be interpreted as content.
-    val dest      = new Mat(1, size, CV_32FC2)
-    val indx      = dest.createIndexer().asInstanceOf[FloatIndexer]
+    val dest = new Mat(1, size, CV_32FC2)
+    val indx = dest.createIndexer().asInstanceOf[FloatIndexer]
     for (i <- 0 until size) {
       val p = points.get(i)
       indx.put(0, i, 0, p.x)
@@ -393,8 +408,8 @@ object OpenCVUtils {
     dest
   }
 
-
-  /** Convert a Scala collection to a JavaCV "vector".
+  /**
+   * Convert a Scala collection to a JavaCV "vector".
    *
    * @param src Scala collection
    * @return JavaCV/native collection
@@ -418,7 +433,7 @@ object OpenCVUtils {
         s"  type:     ${mat.`type`}\n" +
         s"  dims:     ${mat.dims}\n" +
         s"  total:    ${mat.total}\n"
-      )
+    )
   }
 
   def homographyToAffineTransform(homography: Mat): AffineTransform = {
@@ -456,7 +471,12 @@ object OpenCVUtils {
     homography
   }
 
-  def drawFeatures(keyPointsArray: Array[KeyPoint], cp: ColorProcessor, fixedSize: Boolean = false, color: Color = Color.RED): Unit = {
+  def drawFeatures(
+    keyPointsArray: Array[KeyPoint],
+    cp: ColorProcessor,
+    fixedSize: Boolean = false,
+    color: Color = Color.RED
+  ): Unit = {
 
     val circles = keyPointsArray.map { kp =>
       val x = kp.pt().x()
@@ -472,7 +492,12 @@ object OpenCVUtils {
     }
   }
 
-  def drawFeaturesOverlay(keyPointsArray: Array[KeyPoint], imp: ImagePlus, fixedSize: Boolean = false, color: Color = Color.RED): Unit = {
+  def drawFeaturesOverlay(
+    keyPointsArray: Array[KeyPoint],
+    imp: ImagePlus,
+    fixedSize: Boolean = false,
+    color: Color = Color.RED
+  ): Unit = {
 
     val circles = keyPointsArray.map { kp =>
       val x = kp.pt().x()
@@ -489,7 +514,6 @@ object OpenCVUtils {
     overlay.setStrokeColor(color)
     imp.setOverlay(overlay)
   }
-
 
   /**
    * Create a copy of a BufferedImage

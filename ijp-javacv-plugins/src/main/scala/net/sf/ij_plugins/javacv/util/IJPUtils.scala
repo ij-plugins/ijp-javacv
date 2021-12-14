@@ -24,18 +24,19 @@ package net.sf.ij_plugins.javacv.util
 
 import ij.IJ
 
-import java.awt._
+import java.awt.*
 import java.io.IOException
 import java.net.URISyntaxException
-import javax.swing._
+import javax.swing.*
 import javax.swing.border.EmptyBorder
-import javax.swing.event.HyperlinkEvent.EventType._
+import javax.swing.event.HyperlinkEvent.EventType.*
 import javax.swing.event.{HyperlinkEvent, HyperlinkListener}
 import javax.swing.text.html.HTMLDocument
 
 /**
  */
 object IJPUtils {
+
   /**
    * Load icon as a resource for given class without throwing exceptions.
    *
@@ -72,8 +73,8 @@ object IJPUtils {
     pane.setOpaque(false)
     pane.setBorder(null)
     val htmlDocument = pane.getDocument.asInstanceOf[HTMLDocument]
-    val font = UIManager.getFont("Label.font")
-    val bodyRule = "body { font-family: " + font.getFamily + "; " + "font-size: " + font.getSize + "pt; }"
+    val font         = UIManager.getFont("Label.font")
+    val bodyRule     = "body { font-family: " + font.getFamily + "; " + "font-size: " + font.getSize + "pt; }"
     htmlDocument.getStyleSheet.addRule(bodyRule)
     pane.addHyperlinkListener(new HyperlinkListener() {
       def hyperlinkUpdate(e: HyperlinkEvent): Unit = {
@@ -81,7 +82,7 @@ object IJPUtils {
           try {
             Desktop.getDesktop.browse(e.getURL.toURI)
           } catch {
-            case ex@(_: IOException | _: URISyntaxException) =>
+            case ex @ (_: IOException | _: URISyntaxException) =>
               IJ.error(title, "Error following a link.\n" + ex.getMessage)
           }
         }
@@ -100,16 +101,16 @@ object IJPUtils {
    */
   def createInfoPanel(title: String, message: String): Panel = {
     // TODO: use icon with rounded corners
-    val rootPanel = new Panel(new BorderLayout(7, 7))
+    val rootPanel  = new Panel(new BorderLayout(7, 7))
     val titlePanel = new Panel(new BorderLayout(7, 7))
-    val logo = IJPUtils.loadIcon(this.getClass, "/net/sf/ij_plugins/javacv/IJP-48.png")
+    val logo       = IJPUtils.loadIcon(this.getClass, "/net/sf/ij_plugins/javacv/IJP-48.png")
     if (logo != null) {
       val logoLabel = new JLabel(logo, SwingConstants.CENTER)
       logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT)
       titlePanel.add(logoLabel, BorderLayout.WEST)
     }
     val titleLabel = new JLabel(title)
-    val font = titleLabel.getFont
+    val font       = titleLabel.getFont
     titleLabel.setFont(font.deriveFont(Font.BOLD, font.getSize * 2f))
     titlePanel.add(titleLabel, BorderLayout.CENTER)
 

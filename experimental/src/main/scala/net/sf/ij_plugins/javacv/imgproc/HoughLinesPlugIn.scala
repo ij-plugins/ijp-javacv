@@ -28,23 +28,23 @@ import ij.plugin.filter.{PlugInFilter, PlugInFilterRunner}
 import ij.plugin.frame.RoiManager
 import ij.process.ImageProcessor
 import ij.{IJ, ImagePlus}
-import net.sf.ij_plugins.javacv.IJOpenCVConverters._
+import net.sf.ij_plugins.javacv.IJOpenCVConverters.*
 import net.sf.ij_plugins.javacv.util.{ExtendedPlugInFilterTrait, IJPUtils, OpenCVUtils}
 import org.bytedeco.opencv.global.opencv_core.CV_PI
-import org.bytedeco.opencv.global.opencv_imgproc._
+import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.opencv_core.Point
 import org.bytedeco.opencv.opencv_imgproc.Vec2fVector
 
 import java.awt.AWTEvent
-import scala.math._
+import scala.math.*
 
 object HoughLinesPlugIn {
   OpenCVUtils.initJavaCV()
 
-  private var distanceResolutionInPixels: Int = 1
+  private var distanceResolutionInPixels: Int  = 1
   private var angleResolutionInDegrees: Double = 1
-  private var minimumVotes: Int = 80
-  private var sendToResultsTable: Boolean = true
+  private var minimumVotes: Int                = 80
+  private var sendToResultsTable: Boolean      = true
 }
 
 /**
@@ -55,7 +55,7 @@ object HoughLinesPlugIn {
 class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
   _plugin =>
 
-  import HoughLinesPlugIn._
+  import HoughLinesPlugIn.*
 
   override protected def Flags: Int = PlugInFilter.DOES_8G
 
@@ -72,9 +72,9 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
     if (IJ.debugMode) OpenCVUtils.show(src, "src")
 
     // Hough transform for line detection
-    val lines = new Vec2fVector(0)
-    val srn = 0.0
-    val stn = 0.0
+    val lines     = new Vec2fVector(0)
+    val srn       = 0.0
+    val stn       = 0.0
     val min_theta = 0.0
     val max_theta = CV_PI
     try {
@@ -84,7 +84,11 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
         distanceResolutionInPixels,
         scala.math.toRadians(angleResolutionInDegrees),
         minimumVotes,
-        srn, stn, min_theta, max_theta)
+        srn,
+        stn,
+        min_theta,
+        max_theta
+      )
     } catch {
       case ex: RuntimeException =>
         IJ.error(Title, "Error detecting Hough Lines.\n" + ex.getMessage)
@@ -112,7 +116,7 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
       // Add to a Results Table
       if (sendToResultsTable) {
         val resultsTable = new ResultsTable()
-        val rhoTheta = linesToRhoTheta(lines)
+        val rhoTheta     = linesToRhoTheta(lines)
         rhoTheta.zipWithIndex.foreach { case ((rho, theta), i) =>
           resultsTable.incrementCounter()
           resultsTable.addLabel(s"Line ${i + 1}")
@@ -122,8 +126,7 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
         resultsTable.show(Title)
       }
 
-    }
-    catch {
+    } catch {
       case t: Throwable =>
         t.printStackTrace()
         throw t
@@ -146,7 +149,7 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
 
       addPreviewCheckbox(pfr)
       addDialogListener(_plugin)
-      showDialog()
+      this.showDialog()
     }
 
     if (dialog.wasCanceled) {
@@ -185,8 +188,8 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
 
   private def linesToRhoTheta(lines: Vec2fVector): Seq[(Float, Float)] = {
     for (i <- 0 until lines.size().toInt) yield {
-      val line = lines.get(i)
-      val rho = line.get(0)
+      val line  = lines.get(i)
+      val rho   = line.get(0)
       val theta = line.get(1)
       (rho, theta)
     }
@@ -194,24 +197,25 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
 
   private def linesToRois(lines: Vec2fVector, width: Int, height: Int): Seq[Line] = {
     for (i <- 0 until lines.size().toInt) yield {
-      val line = lines.get(i)
-      val rho = line.get(0)
+      val line  = lines.get(i)
+      val rho   = line.get(0)
       val theta = line.get(1)
-      val (pt1, pt2) = if (theta < Pi / 4.0 || theta > 3.0 * Pi / 4.0) {
-        // ~vertical line
-        // point of intersection of the line with first row
-        val p1 = new Point(round(rho / cos(theta)).toInt, 0)
-        // point of intersection of the line with last row
-        val p2 = new Point(round((rho - height * sin(theta)) / cos(theta)).toInt, height)
-        (p1, p2)
-      } else {
-        // ~horizontal line
-        // point of intersection of the line with first column
-        val p1 = new Point(0, round(rho / sin(theta)).toInt)
-        // point of intersection of the line with last column
-        val p2 = new Point(width, round((rho - width * cos(theta)) / sin(theta)).toInt)
-        (p1, p2)
-      }
+      val (pt1, pt2) =
+        if (theta < Pi / 4.0 || theta > 3.0 * Pi / 4.0) {
+          // ~vertical line
+          // point of intersection of the line with first row
+          val p1 = new Point(round(rho / cos(theta)).toInt, 0)
+          // point of intersection of the line with last row
+          val p2 = new Point(round((rho - height * sin(theta)) / cos(theta)).toInt, height)
+          (p1, p2)
+        } else {
+          // ~horizontal line
+          // point of intersection of the line with first column
+          val p1 = new Point(0, round(rho / sin(theta)).toInt)
+          // point of intersection of the line with last column
+          val p2 = new Point(width, round((rho - width * cos(theta)) / sin(theta)).toInt)
+          (p1, p2)
+        }
 
       new Line(pt1.x, pt1.y, pt2.x, pt2.y)
     }

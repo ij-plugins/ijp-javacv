@@ -22,12 +22,12 @@
 
 package net.sf.ij_plugins.javacv
 
-import ij.process._
+import ij.process.*
 import ij.{ImagePlus, ImageStack}
 import org.bytedeco.javacv.{Frame, OpenCVFrameConverter}
-import org.bytedeco.opencv.opencv_core._
+import org.bytedeco.opencv.opencv_core.*
 
-import java.awt.image._
+import java.awt.image.*
 import scala.util.Using
 
 /**
@@ -35,7 +35,8 @@ import scala.util.Using
  */
 object IJOpenCVConverters {
 
-  /** Convert OpenCV `Mat` to ImageJ's ImageProcessor.
+  /**
+   * Convert OpenCV `Mat` to ImageJ's ImageProcessor.
    *
    * Depending on the type input image different instance
    * of `ImageProcessor` will be created, for color images it will be `ColorProcessor`, for 8-bit gray level `ByteProcessor`.
@@ -51,8 +52,8 @@ object IJOpenCVConverters {
     }.get
   }
 
-
-  /** Convert OpenCV `Mat` to ImageJ's `ColorProcessor`.
+  /**
+   * Convert OpenCV `Mat` to ImageJ's `ColorProcessor`.
    *
    * @param image input image.
    * @throws IllegalArgumentException if `Mat` is not a color image.
@@ -61,7 +62,7 @@ object IJOpenCVConverters {
     val ip = toImageProcessor(image)
     ip match {
       case colorProcessor: ColorProcessor => colorProcessor
-      case _ => throw new IllegalArgumentException("Input image is not a color image.")
+      case _                              => throw new IllegalArgumentException("Input image is not a color image.")
     }
   }
 
@@ -78,7 +79,6 @@ object IJOpenCVConverters {
     }.get
   }
 
-
   /** Convert ImageJ's `ImageProcessor` to `BufferedImage`. */
   def toBufferedImage(ip: ImageProcessor): BufferedImage = {
 
@@ -91,7 +91,7 @@ object IJOpenCVConverters {
         val dest = new BufferedImage(ip.getWidth, ip.getHeight, BufferedImage.TYPE_3BYTE_BGR)
         // Easiest way to transfer the data is to draw the input image on the output image,
         // This handles all needed color representation conversions, since both are variants of
-        val g    = dest.getGraphics
+        val g = dest.getGraphics
         g.drawImage(ip.getBufferedImage, 0, 0, null)
         dest
       case _ => throw new IllegalArgumentException("Unsupported ImageProcessor type: " + ip.getClass)
@@ -99,8 +99,8 @@ object IJOpenCVConverters {
 
   }
 
-
-  /** Convert BufferedImage to ImageJ's ImageProcessor.
+  /**
+   * Convert BufferedImage to ImageJ's ImageProcessor.
    *
    * Based on net.sf.ij.jaiio.ImagePlusCreator#createProcessor
    *
@@ -145,7 +145,7 @@ object IJOpenCVConverters {
       }
       val w = image.getWidth
       val h = image.getHeight
-      import java.awt.image.{DataBuffer => DB}
+      import java.awt.image.DataBuffer as DB
       dataBuffer.getDataType match {
         case DB.TYPE_BYTE =>
           new ByteProcessor(w, h, dataBuffer.asInstanceOf[DataBufferByte].getData, colorModel)
@@ -169,7 +169,6 @@ object IJOpenCVConverters {
     }
   }
 
-
   /** Convert `ImageProcessor` to `Mat`. */
   def toMat(src: ImageProcessor): Mat = {
     require(src != null)
@@ -177,7 +176,6 @@ object IJOpenCVConverters {
       toMat(frame)
     }.get
   }
-
 
   /** Convert array of `ImageProcessor`s to `Mat`. A channel will be created for each image. */
   def toMat[T <: ImageProcessor](fps: Array[T]): Mat = {
@@ -188,7 +186,6 @@ object IJOpenCVConverters {
     }
   }
 
-
   /** Convert `ImagePlus` to `Mat`. If there re multiple slices they will be converted to channels. */
   def toMat(src: ImagePlus): Mat = {
     require(src != null)
@@ -196,7 +193,6 @@ object IJOpenCVConverters {
       toMat(frame)
     }.get
   }
-
 
   private def toMat(frame: Frame): Mat = {
     Using(new OpenCVFrameConverter.ToMat()) { converter =>
@@ -206,7 +202,6 @@ object IJOpenCVConverters {
       mat.clone()
     }.get
   }
-
 
   /**
    * Create ImageStack from an array of `ImageProcessor`s
