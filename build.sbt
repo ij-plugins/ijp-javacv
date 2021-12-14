@@ -1,7 +1,7 @@
 import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
-lazy val _version       = "0.4.1"
+lazy val _version       = "0.4.1.1-SNAPSHOT"
 lazy val _scalaVersions = Seq("2.13.7", "3.0.2", "3.1.1-RC1")
 lazy val _scalaVersion  = _scalaVersions.head
 
