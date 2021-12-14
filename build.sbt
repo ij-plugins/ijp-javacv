@@ -1,56 +1,87 @@
 import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
-// @formatter:off
-
 lazy val _version       = "0.4.0.3-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.7", "3.0.2")
+lazy val _scalaVersions = Seq("2.13.7", "3.0.2", "3.1.1-RC1")
 lazy val _scalaVersion  = _scalaVersions.head
 
-name         := "ijp-javacv"
-scalaVersion := _scalaVersion
-publishArtifact     := false
-publish / skip      := true
-sonatypeProfileName := "net.sf.ij-plugins"
+name := "ijp-javacv"
+publishArtifact := false
+publish / skip := true
+
+ThisBuild / scalaVersion := _scalaVersion
+ThisBuild / crossScalaVersions := _scalaVersions
+ThisBuild / sonatypeProfileName := "net.sf.ij-plugins"
+ThisBuild / version := _version
+ThisBuild / organization := "net.sf.ij-plugins"
+ThisBuild / homepage := Some(new URL("https://github.com/ij-plugins/ijp-javacv"))
+ThisBuild / startYear := Some(2002)
+ThisBuild / licenses := Seq(("LGPL-2.1", new URL("https://opensource.org/licenses/LGPL-2.1")))
+
+def isScala2(scalaVersion: String): Boolean =
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, _)) => true
+    case _ => false
+  }
 
 // Platform classifier for native library dependencies
-val platform = org.bytedeco.javacpp.Loader.Detector.getPlatform
-// @formatter:off
+val platform       = org.bytedeco.javacpp.Loader.Detector.getPlatform
 val commonSettings = Seq(
-  version      := _version,
-  organization := "net.sf.ij-plugins",
-  homepage     := Some(new URL("https://github.com/ij-plugins/ijp-javacv")),
-  startYear    := Some(2002),
-  licenses     := Seq(("LGPL-2.1", new URL("https://opensource.org/licenses/LGPL-2.1"))),
   //
-  scalaVersion := _scalaVersion,
-  crossScalaVersions := _scalaVersions,
-  //
-  scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xlint", "-explaintypes"),
-  javacOptions  ++= Seq("-deprecation", "-Xlint"),
+  scalacOptions ++= Seq(
+    "-encoding", "UTF-8",
+    "-unchecked",
+    "-deprecation",
+    "-feature",
+    // Java 8 for compatibility with ImageJ/FIJI
+    "-release",
+    "8"
+    ) ++ (
+    if (isScala2(scalaVersion.value))
+      Seq(
+        "-explaintypes",
+        "-Xsource:3",
+        "-Wunused:imports,privates,locals",
+        "-Wvalue-discard",
+        "-Xlint",
+        "-Xcheckinit",
+        "-Xlint:missing-interpolator",
+        "-Xlint:nonlocal-return",
+        "-Ymacro-annotations",
+        "-Ywarn-dead-code",
+        "-Ywarn-unused:-patvars,_",
+        )
+    else
+      Seq(
+        "-explain",
+        "-explain-types"
+        )
+    ),
+
+  javacOptions ++= Seq("-deprecation", "-Xlint"),
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
   classpathTypes += "maven-plugin",
   libraryDependencies ++= Seq(
-    "org.bytedeco"   % "javacpp"    % "1.5.6"        withSources() withJavadoc(),
-    "org.bytedeco"   % "javacpp"    % "1.5.6"        classifier platform,
-    "org.bytedeco"   % "javacv"     % "1.5.6"        withSources() withJavadoc(),
-    "org.bytedeco"   % "opencv"     % "4.5.3-1.5.6"  withSources() withJavadoc(),
-    "org.bytedeco"   % "opencv"     % "4.5.3-1.5.6"  classifier platform,
-    "org.bytedeco"   % "openblas"   % "0.3.17-1.5.6" withSources() withJavadoc(),
-    "org.bytedeco"   % "openblas"   % "0.3.17-1.5.6" classifier platform,
-    "net.imagej"     % "ij"         % "1.53j",
-//    "com.beachape"  %% "enumeratum" % "1.5.13",
-//    "mpicbg"         % "mpicbg"     % "1.1.1",
+    "org.bytedeco" % "javacpp" % "1.5.6" withSources() withJavadoc(),
+    "org.bytedeco" % "javacpp" % "1.5.6" classifier platform,
+    "org.bytedeco" % "javacv" % "1.5.6" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv" % "4.5.3-1.5.6" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv" % "4.5.3-1.5.6" classifier platform,
+    "org.bytedeco" % "openblas" % "0.3.17-1.5.6" withSources() withJavadoc(),
+    "org.bytedeco" % "openblas" % "0.3.17-1.5.6" classifier platform,
+    "net.imagej" % "ij" % "1.53j",
+    //    "com.beachape"  %% "enumeratum" % "1.5.13",
+    //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest"  % "3.2.10"  % "test",
-  ),
-  Compile / doc /scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
-  Compile / doc /scalacOptions  ++= Opts.doc.version(_version),
-  Compile / doc /scalacOptions  ++= Seq(
+    "org.scalatest" %% "scalatest" % "3.2.10" % "test",
+    ),
+  Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
+  Compile / doc / scalacOptions ++= Opts.doc.version(_version),
+  Compile / doc / scalacOptions ++= Seq(
     "-doc-footer", s"IJP JavaCV API v.${_version}",
     "-doc-root-content", baseDirectory.value + "/src/main/scala/root-doc.creole"
-  ),
-  Compile / doc /scalacOptions  ++= (
+    ),
+  Compile / doc / scalacOptions ++= (
     Option(System.getenv("GRAPHVIZ_DOT_PATH")) match {
       case Some(path) => Seq("-diagrams", "-diagrams-dot-path", path, "-diagrams-debug")
       case None => Seq.empty[String]
@@ -61,7 +92,7 @@ val commonSettings = Seq(
     "ImageJ Releases" at "https://maven.imagej.net/content/repositories/releases/",
     // Use local maven repo for local javacv builds
     Resolver.mavenLocal
-  ),
+    ),
   //
   exportJars := true,
   //
@@ -69,10 +100,10 @@ val commonSettings = Seq(
   // fork a new JVM for 'run' and 'test:run'
   fork := true,
   // ImageJ Plugins
-  ijRuntimeSubDir         := "sandbox",
-  ijPluginsSubDir         := "ij-plugins",
+  ijRuntimeSubDir := "sandbox",
+  ijPluginsSubDir := "ij-plugins",
   ijCleanBeforePrepareRun := true,
-  cleanFiles              += ijPluginsDir.value,
+  cleanFiles += ijPluginsDir.value,
   //
   manifestSetting,
   // Setup publishing
@@ -81,14 +112,13 @@ val commonSettings = Seq(
   sonatypeProjectHosting := Some(GitHubHosting("ij-plugins", "ijp-javacv", "jpsacha@gmail.com")),
   publishTo := sonatypePublishToBundle.value,
   developers := List(
-    Developer(id="jpsacha", name="Jarek Sacha", email="jpsacha@gmail.com", url=url("https://github.com/jpsacha"))
+    Developer(id = "jpsacha", name = "Jarek Sacha", email = "jpsacha@gmail.com", url = url("https://github.com/jpsacha"))
+    )
   )
-)
-// @formatter:on
 
 // Resolvers
 lazy val sonatypeNexusSnapshots = Resolver.sonatypeRepo("snapshots")
-lazy val sonatypeNexusStaging = "Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+lazy val sonatypeNexusStaging   = "Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
 
 lazy val ijp_javacv_core =
   project
@@ -96,8 +126,12 @@ lazy val ijp_javacv_core =
     .settings(
       commonSettings,
       name := "ijp-javacv-core",
-      description := "IJP JavaCV Core"
-    )
+      description := "IJP JavaCV Core",
+      publish / skip := (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, x)) if x > 0 => true
+        case _ => false
+      }),
+      )
 
 lazy val ijp_javacv_plugins =
   project
