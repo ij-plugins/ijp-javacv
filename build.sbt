@@ -3,14 +3,14 @@ import xerial.sbt.Sonatype.GitHubHosting
 
 // @formatter:off
 
-lazy val _version       = "0.4.0.1-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.5", "2.12.13")
+lazy val _version       = "0.4.0.3-SNAPSHOT"
+lazy val _scalaVersions = Seq("2.13.7", "3.0.2")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name         := "ijp-javacv"
 scalaVersion := _scalaVersion
 publishArtifact     := false
-skip in publish     := true
+publish / skip      := true
 sonatypeProfileName := "net.sf.ij-plugins"
 
 // Platform classifier for native library dependencies
@@ -21,35 +21,36 @@ val commonSettings = Seq(
   organization := "net.sf.ij-plugins",
   homepage     := Some(new URL("https://github.com/ij-plugins/ijp-javacv")),
   startYear    := Some(2002),
-  licenses     := Seq(("LGPL-2.1", new URL("http://opensource.org/licenses/LGPL-2.1"))),
+  licenses     := Seq(("LGPL-2.1", new URL("https://opensource.org/licenses/LGPL-2.1"))),
   //
   scalaVersion := _scalaVersion,
+  crossScalaVersions := _scalaVersions,
   //
   scalacOptions ++= Seq("-unchecked", "-deprecation", "-Xlint", "-explaintypes"),
   javacOptions  ++= Seq("-deprecation", "-Xlint"),
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
   classpathTypes += "maven-plugin",
   libraryDependencies ++= Seq(
-    "org.bytedeco"   % "javacpp"    % "1.5.5"        withSources() withJavadoc(),
-    "org.bytedeco"   % "javacpp"    % "1.5.5"        classifier platform,
-    "org.bytedeco"   % "javacv"     % "1.5.5"        withSources() withJavadoc(),
-    "org.bytedeco"   % "opencv"     % "4.5.1-1.5.5"  withSources() withJavadoc(),
-    "org.bytedeco"   % "opencv"     % "4.5.1-1.5.5"  classifier platform,
-    "org.bytedeco"   % "openblas"   % "0.3.13-1.5.5" withSources() withJavadoc(),
-    "org.bytedeco"   % "openblas"   % "0.3.13-1.5.5" classifier platform,
-    "net.imagej"     % "ij"         % "1.53h",
+    "org.bytedeco"   % "javacpp"    % "1.5.6"        withSources() withJavadoc(),
+    "org.bytedeco"   % "javacpp"    % "1.5.6"        classifier platform,
+    "org.bytedeco"   % "javacv"     % "1.5.6"        withSources() withJavadoc(),
+    "org.bytedeco"   % "opencv"     % "4.5.3-1.5.6"  withSources() withJavadoc(),
+    "org.bytedeco"   % "opencv"     % "4.5.3-1.5.6"  classifier platform,
+    "org.bytedeco"   % "openblas"   % "0.3.17-1.5.6" withSources() withJavadoc(),
+    "org.bytedeco"   % "openblas"   % "0.3.17-1.5.6" classifier platform,
+    "net.imagej"     % "ij"         % "1.53j",
 //    "com.beachape"  %% "enumeratum" % "1.5.13",
 //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest"  % "3.2.6"  % "test",
+    "org.scalatest" %% "scalatest"  % "3.2.10"  % "test",
   ),
-  scalacOptions in(Compile, doc) ++= Opts.doc.title("IJP JavaCV API"),
-  scalacOptions in(Compile, doc) ++= Opts.doc.version(_version),
-  scalacOptions in(Compile, doc) ++= Seq(
+  Compile / doc /scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
+  Compile / doc /scalacOptions  ++= Opts.doc.version(_version),
+  Compile / doc /scalacOptions  ++= Seq(
     "-doc-footer", s"IJP JavaCV API v.${_version}",
     "-doc-root-content", baseDirectory.value + "/src/main/scala/root-doc.creole"
   ),
-  scalacOptions in(Compile, doc) ++= (
+  Compile / doc /scalacOptions  ++= (
     Option(System.getenv("GRAPHVIZ_DOT_PATH")) match {
       case Some(path) => Seq("-diagrams", "-diagrams-dot-path", path, "-diagrams-debug")
       case None => Seq.empty[String]
@@ -106,8 +107,8 @@ lazy val ijp_javacv_plugins =
       name := "ijp-javacv-plugins",
       description := "IJP JavaCV ImageJ Plugins",
       publishArtifact := false,
-      skip in publish := true,
-    )
+      publish / skip := true,
+      )
     .dependsOn(ijp_javacv_core)
 
 lazy val examples =
@@ -118,8 +119,8 @@ lazy val examples =
       name := "examples",
       description := "IJP JavaCV Examples",
       publishArtifact := false,
-      skip in publish := true,
-    )
+      publish / skip := true,
+      )
     .dependsOn(ijp_javacv_plugins)
 
 // The 'experimental' is not a part of distribution.
@@ -131,13 +132,13 @@ lazy val experimental = project
     name := "experimental",
     // Do not publish this artifact
     publishArtifact := false,
-    skip in publish := true,
+    publish / skip := true,
     // Customize `sbt-imagej` plugin
     ijRuntimeSubDir := "sandbox",
     ijPluginsSubDir := "ij-plugins",
     ijCleanBeforePrepareRun := true,
     cleanFiles += ijPluginsDir.value,
-  )
+    )
   .dependsOn(ijp_javacv_plugins)
 
 addCommandAlias("ijRun", "experimental/ijRun")

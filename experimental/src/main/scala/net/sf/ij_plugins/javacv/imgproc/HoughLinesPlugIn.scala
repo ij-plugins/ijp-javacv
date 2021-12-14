@@ -146,7 +146,7 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
 
       addPreviewCheckbox(pfr)
       addDialogListener(_plugin)
-      showDialog()
+      this.showDialog()
     }
 
     if (dialog.wasCanceled) {
