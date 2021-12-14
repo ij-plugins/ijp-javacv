@@ -26,11 +26,10 @@ import ij.process.ImageProcessor
 import net.sf.ij_plugins.javacv.IJOpenCVConverters.toImageProcessor
 import net.sf.ij_plugins.javacv.util.OpenCVUtils
 import org.bytedeco.javacv.{Frame, Java2DFrameConverter, OpenCVFrameConverter}
-import org.bytedeco.opencv.global.opencv_core._
+import org.bytedeco.opencv.global.opencv_core.*
 import org.bytedeco.opencv.opencv_core.{Mat, Scalar}
 
 import scala.util.Using
-
 
 object ConverterBenchmarkApp extends App {
 
@@ -56,9 +55,10 @@ object ConverterBenchmarkApp extends App {
     }.get
     val tf1 = System.currentTimeMillis()
 
-    println(s"Conversion time: through BufferedImage: ${tb1 - tb0}ms, direct: ${ti1 - ti0}ms, just frame ${tf1 - tf0}ms")
+    println(
+      s"Conversion time: through BufferedImage: ${tb1 - tb0}ms, direct: ${ti1 - ti0}ms, just frame ${tf1 - tf0}ms"
+    )
   }
-
 
   def covertToFrame(mat: Mat): Frame = {
     Using(new OpenCVFrameConverter.ToMat()) { converter =>

@@ -22,7 +22,7 @@
 
 package net.sf.ij_plugins.javacv
 
-import ij.process._
+import ij.process.*
 import org.bytedeco.javacv.{Frame, FrameConverter}
 
 import java.nio.{ByteBuffer, FloatBuffer, ShortBuffer}
@@ -59,9 +59,7 @@ object ImageProcessorFrameConverter {
     }
   }
 
-
-  private[javacv] def copyPixelsByte(srcPixels: Array[Array[Byte]],
-                                     dstFrame: Frame): Unit = {
+  private[javacv] def copyPixelsByte(srcPixels: Array[Array[Byte]], dstFrame: Frame): Unit = {
     val dstBuffer = dstFrame.image(0).position(0).asInstanceOf[ByteBuffer]
     val dstPixels = new Array[Byte](dstFrame.imageStride * dstFrame.imageHeight)
     for (i <- 0 until dstFrame.imageHeight) {
@@ -71,7 +69,6 @@ object ImageProcessorFrameConverter {
     dstBuffer.position(0)
     dstBuffer.put(dstPixels)
   }
-
 
   private[javacv] def copyPixelsByte(srcFrame: Frame): Array[Array[Byte]] = {
 
@@ -87,9 +84,7 @@ object ImageProcessorFrameConverter {
     dstPixels
   }
 
-
-  private[javacv] def copyPixelsShort(srcPixels: Array[Array[Short]],
-                                      dstFrame: Frame): Unit = {
+  private[javacv] def copyPixelsShort(srcPixels: Array[Array[Short]], dstFrame: Frame): Unit = {
     val dstBuffer = dstFrame.image(0).position(0).asInstanceOf[ShortBuffer]
     val dstPixels = new Array[Short](dstFrame.imageStride * dstFrame.imageHeight)
     for (y <- 0 until dstFrame.imageHeight) {
@@ -99,7 +94,6 @@ object ImageProcessorFrameConverter {
     dstBuffer.position(0)
     dstBuffer.put(dstPixels)
   }
-
 
   private[javacv] def copyPixelsShort(srcFrame: Frame): Array[Array[Short]] = {
 
@@ -115,9 +109,7 @@ object ImageProcessorFrameConverter {
     dstPixels
   }
 
-
-  private[javacv] def copyPixelsFloat(srcPixels: Array[Array[Float]],
-                                      dstFrame: Frame): Unit = {
+  private[javacv] def copyPixelsFloat(srcPixels: Array[Array[Float]], dstFrame: Frame): Unit = {
     val dstBuffer = dstFrame.image(0).position(0).asInstanceOf[FloatBuffer]
     val dstPixels = new Array[Float](dstFrame.imageStride * dstFrame.imageHeight)
     for (y <- 0 until dstFrame.imageHeight) {
@@ -127,7 +119,6 @@ object ImageProcessorFrameConverter {
     dstBuffer.position(0)
     dstBuffer.put(dstPixels)
   }
-
 
   private[javacv] def copyPixelsFloat(srcFrame: Frame): Array[Array[Float]] = {
 
@@ -143,11 +134,14 @@ object ImageProcessorFrameConverter {
     dstPixels
   }
 
-
-  private def copyStride[T](y: Int,
-                            width: Int, channels: Int, imageStride: Int,
-                            srcPixels: Array[Array[T]],
-                            dstPixels: Array[T]): Unit = {
+  private def copyStride[T](
+    y: Int,
+    width: Int,
+    channels: Int,
+    imageStride: Int,
+    srcPixels: Array[Array[T]],
+    dstPixels: Array[T]
+  ): Unit = {
     val src_offset_y = y * width
     val dst_offset_y = y * imageStride
     if (channels == 1) {
@@ -163,11 +157,14 @@ object ImageProcessorFrameConverter {
     }
   }
 
-
-  private def copyFromStride[T](y: Int,
-                                width: Int, channels: Int, imageStride: Int,
-                                srcPixels: Array[T],
-                                dstPixels: Array[Array[T]]): Unit = {
+  private def copyFromStride[T](
+    y: Int,
+    width: Int,
+    channels: Int,
+    imageStride: Int,
+    srcPixels: Array[T],
+    dstPixels: Array[Array[T]]
+  ): Unit = {
     val src_offset_y = y * imageStride
     val dst_offset_y = y * width
     if (channels == 1) {
@@ -182,7 +179,6 @@ object ImageProcessorFrameConverter {
       }
     }
   }
-
 
   private def copyPixelsRGB(pixels: Array[Int], frame: Frame): Unit = {
     val dstBuffer = frame.image(0).position(0).asInstanceOf[ByteBuffer]
@@ -206,7 +202,6 @@ object ImageProcessorFrameConverter {
     }
   }
 
-
   private def copyPixelsRGB(frame: Frame): Array[Int] = {
     val srcBuffer = frame.image(0).position(0).asInstanceOf[ByteBuffer]
     val dstPixels = new Array[Int](frame.imageWidth * frame.imageHeight)
@@ -226,7 +221,6 @@ object ImageProcessorFrameConverter {
     dstPixels
   }
 
-
   private def toByteProcessor(frame: Frame): ByteProcessor = {
     require(frame.imageDepth == Frame.DEPTH_UBYTE)
     require(frame.imageChannels == 1)
@@ -234,7 +228,6 @@ object ImageProcessorFrameConverter {
     val dstPixels = copyPixelsByte(frame)
     new ByteProcessor(frame.imageWidth, frame.imageHeight, dstPixels.head)
   }
-
 
   private def toShortProcessor(frame: Frame): ShortProcessor = {
     require(frame.imageDepth == Frame.DEPTH_USHORT)
@@ -244,7 +237,6 @@ object ImageProcessorFrameConverter {
     new ShortProcessor(frame.imageWidth, frame.imageHeight, dstPixels.head, null)
   }
 
-
   private def toFloatProcessor(frame: Frame): FloatProcessor = {
     require(frame.imageDepth == Frame.DEPTH_FLOAT)
     require(frame.imageChannels == 1)
@@ -252,7 +244,6 @@ object ImageProcessorFrameConverter {
     val dstPixels = copyPixelsFloat(frame)
     new FloatProcessor(frame.imageWidth, frame.imageHeight, dstPixels.head)
   }
-
 
   private[javacv] def toColorProcessor(frame: Frame): ColorProcessor = {
     require(frame.imageDepth == Frame.DEPTH_UBYTE)
@@ -269,7 +260,7 @@ object ImageProcessorFrameConverter {
  */
 class ImageProcessorFrameConverter extends FrameConverter[ImageProcessor] {
 
-  import ImageProcessorFrameConverter._
+  import ImageProcessorFrameConverter.*
 
   override def convert(ip: ImageProcessor): Frame = toFrame(ip)
 
@@ -281,20 +272,22 @@ class ImageProcessorFrameConverter extends FrameConverter[ImageProcessor] {
     }
 
     val (imageDepth, channels) = ip match {
-      case _: ByteProcessor => (Frame.DEPTH_UBYTE, 1)
+      case _: ByteProcessor  => (Frame.DEPTH_UBYTE, 1)
       case _: ShortProcessor => (Frame.DEPTH_USHORT, 1)
       case _: FloatProcessor => (Frame.DEPTH_FLOAT, 1)
       case _: ColorProcessor => (Frame.DEPTH_UBYTE, 3)
       case _ => throw new UnsupportedOperationException(s"Unsupported ImageProcessor type: ${ip.getClass}")
     }
 
-    val width = ip.getWidth
+    val width  = ip.getWidth
     val height = ip.getHeight
 
-    if (frame == null ||
+    if (
+      frame == null ||
       frame.imageWidth != width ||
       frame.imageHeight != height ||
-      frame.imageChannels != channels) {
+      frame.imageChannels != channels
+    ) {
       // Reallocate frame, its type or size changed
       frame = new Frame(width, height, imageDepth, channels)
     }

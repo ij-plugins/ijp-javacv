@@ -25,12 +25,11 @@ package net.sf.ij_plugins.javacv
 import ij.process.{ByteProcessor, ColorProcessor}
 import org.bytedeco.javacv.Frame
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers._
+import org.scalatest.matchers.should.Matchers.*
 
 import scala.util.Using
 
 class ImageProcessorFrameConverterTest extends AnyFlatSpec {
-
 
   it should "convert GRAY8 to Frame" in {
     val bp = new ByteProcessor(13, 17)
@@ -38,7 +37,6 @@ class ImageProcessorFrameConverterTest extends AnyFlatSpec {
     val converter = new ImageProcessorFrameConverter()
 
     Using(converter.convert(bp)) { frame =>
-
       frame.imageDepth should be(Frame.DEPTH_UBYTE)
       frame.imageWidth should be(13)
       frame.imageHeight should be(17)
@@ -52,7 +50,6 @@ class ImageProcessorFrameConverterTest extends AnyFlatSpec {
     val converter = new ImageProcessorFrameConverter()
 
     Using(converter.convert(cp)) { frame =>
-
       frame.imageDepth should be(Frame.DEPTH_UBYTE)
       frame.imageWidth should be(13)
       frame.imageHeight should be(17)
@@ -104,6 +101,5 @@ class ImageProcessorFrameConverterTest extends AnyFlatSpec {
   //
   //    IJ.save(new ImagePlus("", dstIP), "tmp_ImageProcessorFrameConverterTest_from_frame.png")
   //  }
-
 
 }

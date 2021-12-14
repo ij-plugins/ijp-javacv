@@ -24,7 +24,7 @@ package net.sf.ij_plugins.javacv
 
 import ij.process.ImageProcessor
 import ij.{ImagePlus, ImageStack}
-import net.sf.ij_plugins.javacv.ImageProcessorFrameConverter._
+import net.sf.ij_plugins.javacv.ImageProcessorFrameConverter.*
 import org.bytedeco.javacv.{Frame, FrameConverter}
 
 /**
@@ -43,9 +43,9 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     }
 
     val (imageDepth, channels) = imp.getType match {
-      case ImagePlus.GRAY8 => (Frame.DEPTH_UBYTE, imp.getStackSize)
-      case ImagePlus.GRAY16 => (Frame.DEPTH_USHORT, imp.getStackSize)
-      case ImagePlus.GRAY32 => (Frame.DEPTH_FLOAT, imp.getStackSize)
+      case ImagePlus.GRAY8     => (Frame.DEPTH_UBYTE, imp.getStackSize)
+      case ImagePlus.GRAY16    => (Frame.DEPTH_USHORT, imp.getStackSize)
+      case ImagePlus.GRAY32    => (Frame.DEPTH_FLOAT, imp.getStackSize)
       case ImagePlus.COLOR_256 => (Frame.DEPTH_UBYTE, imp.getStackSize)
       case ImagePlus.COLOR_RGB =>
         if (imp.getStackSize == 1) {
@@ -58,13 +58,15 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
         throw new UnsupportedOperationException(s"Unsupported ImagePlus type: $t")
     }
 
-    val width = imp.getWidth
+    val width  = imp.getWidth
     val height = imp.getHeight
 
-    if (frame == null ||
+    if (
+      frame == null ||
       frame.imageWidth != width ||
       frame.imageHeight != height ||
-      frame.imageChannels != channels) {
+      frame.imageChannels != channels
+    ) {
       // Reallocate frame, its type or size changed
       frame = new Frame(width, height, imageDepth, channels)
     }
@@ -80,7 +82,6 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     frame
   }
 
-
   private def toImagePlus(frame: Frame): ImagePlus = {
     if (frame == null || frame.image == null) {
       return null
@@ -88,16 +89,15 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
 
     frame.imageDepth match {
       case Frame.DEPTH_UBYTE => frame.imageChannels match {
-        case 3 => toRGB(frame)
-        case _ => toGRAY8(frame)
-      }
+          case 3 => toRGB(frame)
+          case _ => toGRAY8(frame)
+        }
       case Frame.DEPTH_USHORT => toGRAY16(frame)
-      case Frame.DEPTH_FLOAT => toGRAY32(frame)
-      case imageDepth => throw new UnsupportedOperationException(s"Unsupported image depth: $imageDepth")
+      case Frame.DEPTH_FLOAT  => toGRAY32(frame)
+      case imageDepth         => throw new UnsupportedOperationException(s"Unsupported image depth: $imageDepth")
     }
 
   }
-
 
   private def toGRAY8(frame: Frame): ImagePlus = {
     require(frame.imageDepth == Frame.DEPTH_UBYTE)
@@ -107,7 +107,6 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     toImagePlus(frame.imageWidth, frame.imageHeight, dstPixels)
   }
 
-
   private def toGRAY16(frame: Frame): ImagePlus = {
     require(frame.imageDepth == Frame.DEPTH_USHORT)
 
@@ -115,7 +114,6 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
 
     toImagePlus(frame.imageWidth, frame.imageHeight, dstPixels)
   }
-
 
   private def toGRAY32(frame: Frame): ImagePlus = {
     require(frame.imageDepth == Frame.DEPTH_FLOAT)
@@ -125,12 +123,10 @@ class ImagePlusFrameConverter extends FrameConverter[ImagePlus] {
     toImagePlus(frame.imageWidth, frame.imageHeight, dstPixels)
   }
 
-
   private def toRGB(frame: Frame): ImagePlus = {
     val cp = toColorProcessor(frame)
     new ImagePlus("", cp)
   }
-
 
   private def toImagePlus[T](width: Int, height: Int, pixels: Array[Array[T]]): ImagePlus = {
     val stack = new ImageStack(width, height, pixels.length)

@@ -29,13 +29,12 @@ import ij.{IJ, ImagePlus}
 
 /**
  * Helper for implementing `ExtendedPlugInFilter`.
- *
  */
 trait ExtendedPlugInFilterTrait extends ExtendedPlugInFilter with DialogListener {
 
   private var _imp: ImagePlus = _
-  private var _nPasses = 0
-  private var _currentPass = 0
+  private var _nPasses        = 0
+  private var _currentPass    = 0
 
   /**
    * Image container that is the input to this plugin.

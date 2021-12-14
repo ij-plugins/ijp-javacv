@@ -27,23 +27,23 @@ import ij.plugin.filter.{PlugInFilter, PlugInFilterRunner}
 import ij.plugin.frame.RoiManager
 import ij.process.ImageProcessor
 import ij.{IJ, ImagePlus}
-import net.sf.ij_plugins.javacv.IJOpenCVConverters._
+import net.sf.ij_plugins.javacv.IJOpenCVConverters.*
 import net.sf.ij_plugins.javacv.util.{ExtendedPlugInFilterTrait, IJPUtils, OpenCVUtils}
-import org.bytedeco.opencv.global.opencv_imgproc._
-import org.bytedeco.opencv.opencv_imgproc._
+import org.bytedeco.opencv.global.opencv_imgproc.*
+import org.bytedeco.opencv.opencv_imgproc.*
 
 import java.awt.AWTEvent
 
 object HoughCirclesPlugIn {
   OpenCVUtils.initJavaCV()
 
-  private val method: Int = HOUGH_GRADIENT
-  private var dp: Double = 2
-  private var minDist: Double = 33
-  private var highThreshold: Double = 200
-  private var votes: Double = 100
-  private var minRadius: Int = 40
-  private var maxRadius: Int = 90
+  private val method: Int                 = HOUGH_GRADIENT
+  private var dp: Double                  = 2
+  private var minDist: Double             = 33
+  private var highThreshold: Double       = 200
+  private var votes: Double               = 100
+  private var minRadius: Int              = 40
+  private var maxRadius: Int              = 90
   private var sendToResultsTable: Boolean = true
 }
 
@@ -55,7 +55,7 @@ object HoughCirclesPlugIn {
 class HoughCirclesPlugIn extends ExtendedPlugInFilterTrait {
   _plugin =>
 
-  import HoughCirclesPlugIn._
+  import HoughCirclesPlugIn.*
 
   override protected def Flags: Int = PlugInFilter.DOES_8G
 
@@ -81,7 +81,8 @@ class HoughCirclesPlugIn extends ExtendedPlugInFilterTrait {
         highThreshold,
         votes,
         minRadius,
-        maxRadius)
+        maxRadius
+      )
     } catch {
       case ex: RuntimeException =>
         IJ.error(Title, "Error detecting Hough Circles.\n" + ex.getMessage)
@@ -129,8 +130,7 @@ class HoughCirclesPlugIn extends ExtendedPlugInFilterTrait {
         // TODO: clear results table
       }
 
-    }
-    catch {
+    } catch {
       case t: Throwable =>
         t.printStackTrace()
         throw t

@@ -42,7 +42,7 @@ class OpenWithOpenCVPlugIn extends PlugIn {
 
     // Read input image
     val matV = new MatVector()
-    val ok = imreadmulti(file.getAbsolutePath, matV, IMREAD_UNCHANGED)
+    val ok   = imreadmulti(file.getAbsolutePath, matV, IMREAD_UNCHANGED)
     if (!ok) {
       throw new IOException("Couldn't load image: " + file.getAbsolutePath)
     }

@@ -1,4 +1,3 @@
-
 // `javacpp` are packaged with maven-plugin packaging, we need to make SBT aware that it should be added to class path.
 classpathTypes += "maven-plugin"
 

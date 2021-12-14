@@ -34,10 +34,10 @@ import java.awt.image.BufferedImage
 
 class MatGCTesterPlugin extends PlugIn {
 
-  private var imageOption: Option[ImagePlus] = None
-  private var matOption: Option[Mat] = None
+  private var imageOption: Option[ImagePlus]  = None
+  private var matOption: Option[Mat]          = None
   private var biOption: Option[BufferedImage] = None
-  private val Title = "Mat() GC Tester"
+  private val Title                           = "Mat() GC Tester"
 
   override def run(arg: String): Unit = {
 
@@ -105,7 +105,6 @@ class MatGCTesterPlugin extends PlugIn {
         }
       })
     }
-
 
     gd.add(createMatButton)
     gd.add(displayMatButton)
