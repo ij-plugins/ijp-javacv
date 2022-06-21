@@ -1,8 +1,8 @@
 import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
-lazy val _version       = "0.4.1.1-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.7", "3.0.2", "3.1.1-RC2")
+lazy val _version       = "0.4.1.2-SNAPSHOT"
+lazy val _scalaVersions = Seq("2.13.8", "3.0.2", "3.1.3")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name := "ijp-javacv"
@@ -62,18 +62,18 @@ val commonSettings = Seq(
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
   classpathTypes += "maven-plugin",
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp" % "1.5.6" withSources() withJavadoc(),
-    "org.bytedeco" % "javacpp" % "1.5.6" classifier platform,
-    "org.bytedeco" % "javacv" % "1.5.6" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv" % "4.5.3-1.5.6" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv" % "4.5.3-1.5.6" classifier platform,
-    "org.bytedeco" % "openblas" % "0.3.17-1.5.6" withSources() withJavadoc(),
-    "org.bytedeco" % "openblas" % "0.3.17-1.5.6" classifier platform,
-    "net.imagej" % "ij" % "1.53j",
+    "org.bytedeco" % "javacpp" % "1.5.7" withSources() withJavadoc(),
+    "org.bytedeco" % "javacpp" % "1.5.7" classifier platform,
+    "org.bytedeco" % "javacv" % "1.5.7" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv" % "4.5.5-1.5.7" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv" % "4.5.5-1.5.7" classifier platform,
+    "org.bytedeco" % "openblas" % "0.3.19-1.5.7" withSources() withJavadoc(),
+    "org.bytedeco" % "openblas" % "0.3.19-1.5.7" classifier platform,
+    "net.imagej" % "ij" % "1.53s",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest" % "3.2.10" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.11" % "test",
     ),
   Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
   Compile / doc / scalacOptions ++= Opts.doc.version(_version),
