@@ -1,6 +1,6 @@
 /*
  * Image/J Plugins
- * Copyright (C) 2002-2021 Jarek Sacha
+ * Copyright (C) 2002-2022 Jarek Sacha
  * Author's email: jpsacha at gmail dot com
  *
  * This library is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@ import ij.process.{ByteProcessor, ColorProcessor}
 import ij.{IJ, ImagePlus}
 import net.sf.ij_plugins.javacv.util.OpenCVUtils.loadMulti
 import org.bytedeco.javacv.{Frame, OpenCVFrameConverter}
+import org.bytedeco.opencv.global.opencv_core.CV_8U
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.*
 
@@ -84,6 +85,10 @@ class ImagePlusFrameConverterTest extends AnyFlatSpec {
 
     val srcMat = loadMulti(srcFile)
     srcMat should not be (null)
+    srcMat.depth() should be(CV_8U)
+    srcMat.cols() should be(186)
+    srcMat.rows() should be(226)
+    srcMat.channels() should be(27)
 
     Using.Manager { use =>
       val openCVConverter = use(new OpenCVFrameConverter.ToMat())
