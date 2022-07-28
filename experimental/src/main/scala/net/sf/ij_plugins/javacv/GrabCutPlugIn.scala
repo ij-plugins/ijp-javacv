@@ -1,7 +1,23 @@
 /*
- * Copyright (c) 2011-2022 Jarek Sacha. All Rights Reserved.
+ * Image/J Plugins
+ * Copyright (C) 2002-2022 Jarek Sacha
+ * Author's email: jpsacha at gmail dot com
  *
- * Author's e-mail: jpsacha at gmail.com
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Latest release available at http://sourceforge.net/projects/ij-plugins/
  */
 
 package net.sf.ij_plugins.javacv
@@ -18,13 +34,13 @@ class GrabCutPlugIn extends PlugIn {
 
   private val Title = "Grab Cut Segmentation"
 
-//  private var impOpt: Option[ImagePlus] = None
-
-//  override def setup(arg: String, imp: ImagePlus): Int = {
-//    impOpt = Option(imp)
-//    PlugInFilter.DOES_8G + PlugInFilter.DOES_16 + PlugInFilter.DOES_32 + PlugInFilter.DOES_RGB
-//      + PlugInFilter.ROI_REQUIRED
-//  }
+  // TODO: Option to set number of iterations
+  // TODO: Dialog with preview
+  // TODO: Option se send ROI back to original image (or send back an overlay + select color of the ROI or
+  //       auto select most distant to color in the image?)
+  // TODO: Option se send ROI back to ROI Manager
+  // TODO: Support mask selection
+  // TODO: Show debug data from GrubCut
 
   override def run(arg: String): Unit = {
     Option(IJ.getImage) match {
