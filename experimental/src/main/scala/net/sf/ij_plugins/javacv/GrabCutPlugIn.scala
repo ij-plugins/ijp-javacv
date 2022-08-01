@@ -1,54 +1,40 @@
 /*
- * Image/J Plugins
- * Copyright (C) 2002-2022 Jarek Sacha
- * Author's email: jpsacha at gmail dot com
+ * Copyright (c) 2011-2022 Jarek Sacha. All Rights Reserved.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Latest release available at http://sourceforge.net/projects/ij-plugins/
+ * Author's e-mail: jpsacha at gmail.com
  */
 
 package net.sf.ij_plugins.javacv
 
-import ij.gui.Roi
+import ij.gui.{NonBlockingGenericDialog, Overlay, Roi}
 import ij.plugin.PlugIn
 import ij.process.ImageProcessor
 import ij.{IJ, ImagePlus}
-import net.sf.ij_plugins.javacv.util.OpenCVUtils.toMat8U
-import org.bytedeco.opencv.global.opencv_imgproc.*
-import org.bytedeco.opencv.opencv_core.{Mat, Rect}
+
+import java.awt.Color
 
 class GrabCutPlugIn extends PlugIn {
 
   private val Title = "Grab Cut Segmentation"
 
-  // TODO: Option to set number of iterations
-  // TODO: Dialog with preview
-  // TODO: Option se send ROI back to original image (or send back an overlay + select color of the ROI or
-  //       auto select most distant to color in the image?)
-  // TODO: Option se send ROI back to ROI Manager
-  // TODO: Support mask selection
-  // TODO: Show debug data from GrubCut
+  private var imp: Option[ImagePlus] = None
 
+  private var gci: Option[GrubCutInteraction] = None
+
+  private var frgROIAddition: Option[Roi] = None
+  private var bkgROIAddition: Option[Roi] = None
+
+  private val bkgColor: Color      = Color.BLUE
+  private val bkgTransparency: Int = 128
+
+  // TODO: Option to set number of iterations
   override def run(arg: String): Unit = {
-    Option(IJ.getImage) match {
+    imp = Option(IJ.getImage)
+    imp match {
       case Some(imp) =>
         Option(imp.getRoi) match {
           case Some(roi) =>
-            val dst = run(imp.getProcessor, roi)
-            new ImagePlus(s"${imp.getShortTitle}+GrabCut", dst).show()
+            interact(imp.getProcessor, roi)
           case None =>
             IJ.error(Title, "ROI enclosing the object is required.")
         }
@@ -57,32 +43,124 @@ class GrabCutPlugIn extends PlugIn {
     }
   }
 
-  private def run(ip: ImageProcessor, roi: Roi): ImageProcessor = {
+  def interact(ip: ImageProcessor, roi: Roi): Unit = {
+    IJ.showStatus(s"$Title: Starting")
 
-    val image = IJOpenCVConverters.toMat(ip)
+    gci = Option(new GrubCutInteraction(ip))
 
-    // Define bounding rectangle, pixels outside this rectangle will be labeled as background.
-//    val rectangle = new Rect(10, 100, 380, 180)
-    val bounds    = roi.getBounds
-    val rectangle = new Rect(bounds.x, bounds.y, bounds.width, bounds.height)
+    IJ.showStatus(s"$Title: Run initial segmentation")
+    gci.foreach(_.initialRun(roi.getBounds))
+    updateDisplay()
 
-    val result    = new Mat()
-    val iterCount = 5
-    val mode      = GC_INIT_WITH_RECT
+    val dialog = new NonBlockingGenericDialog(Title)
+    dialog.addButton(
+      "Add to Foreground",
+      (_) => {
+        imp.flatMap(im => Option(im.getRoi)) match {
+          case Some(r) =>
+            frgROIAddition = IJUtils.add(frgROIAddition, r)
+            updateDisplay()
+          case None =>
+            IJ.error(Title, "Selection required")
+        }
+      }
+    )
 
-    // Need to allocate arrays for temporary data
-    val bgdModel = new Mat()
-    val fgdModel = new Mat()
+    dialog.addButton(
+      "Add to Background",
+      (_) => {
+        imp.flatMap(im => Option(im.getRoi)) match {
+          case Some(r) =>
+            bkgROIAddition = IJUtils.add(bkgROIAddition, r)
+            updateDisplay()
+          case None =>
+            IJ.error(Title, "Selection required")
+        }
+      }
+    )
 
-    // GrabCut segmentation
-    grabCut(image, result, rectangle, bgdModel, fgdModel, iterCount, mode)
+    dialog.addButton(
+      "Update GrubCut",
+      (_) => {
+        IJ.showStatus(s"$Title: Update GrubCut")
 
-    // Prepare image for display: extract foreground
-    threshold(result, result, GC_PR_FGD - 0.5, GC_PR_FGD + 0.5, THRESH_BINARY)
+        // Add BKG and FRG modifications
 
-    val r2 = toMat8U(result)
+        frgROIAddition.foreach(roi => gci.foreach(_.addToForeground(roi)))
+        frgROIAddition = None
 
-    val dst = IJOpenCVConverters.toImageProcessor(r2)
-    dst
+        bkgROIAddition.foreach(roi => gci.foreach(_.addToBackground(roi)))
+        bkgROIAddition = None
+
+        IJ.showStatus(s"$Title: Run GrubCut")
+        gci.foreach(_.update())
+
+        updateDisplay()
+      }
+    )
+
+    dialog.showDialog()
+
+    if (dialog.wasOKed()) {
+      showFinalResult()
+    } else {
+      // Restore original ROI
+      imp.foreach(_.setOverlay(null))
+      imp.foreach(_.setRoi(roi))
+    }
+  }
+
+  private def updateDisplay(): Unit = {
+
+    val bkgOverlay = new Overlay()
+
+    IJ.showStatus(s"$Title: Display results")
+    gci.foreach { gc =>
+      IJUtils
+        .add(gc.backgroundRoi, gc.probableBackgroundRoi)
+        .foreach { roi =>
+          roi.setStrokeColor(bkgColor)
+          roi.setStrokeWidth(2)
+          bkgOverlay.add(roi, "All background outline")
+
+          addFill(bkgOverlay, roi, bkgColor, bkgTransparency, "All background fill")
+        }
+    }
+
+    frgROIAddition.foreach { r =>
+      r.setStrokeColor(Color.GREEN)
+      bkgOverlay.add(r, "Foreground addition")
+      addFill(bkgOverlay, r, r.getStrokeColor, bkgTransparency, "Foreground addition fill")
+    }
+    bkgROIAddition.foreach { r =>
+      r.setStrokeColor(Color.RED)
+      bkgOverlay.add(r, "Background addition")
+      addFill(bkgOverlay, r, r.getStrokeColor, bkgTransparency, "Background addition fill")
+    }
+
+    imp.foreach(_.setRoi(null.asInstanceOf[Roi]))
+    imp.foreach(_.setOverlay(bkgOverlay))
+  }
+
+  private def addFill(overlay: Overlay, roi: Roi, color: Color, transparency: Int, name: String): Unit = {
+    val roiFill = roi.clone().asInstanceOf[Roi]
+    roiFill.setFillColor(new Color(color.getRed, color.getGreen, color.getBlue, transparency))
+
+    overlay.add(roiFill, name)
+  }
+
+  private def showFinalResult(): Unit = {
+    IJ.showStatus(s"$Title: Display final results")
+
+    gci.foreach { gc =>
+      IJUtils.add(gc.foregroundRoi, gc.probableForegroundRoi) match {
+        case Some(roi) => imp.foreach(_.setRoi(roi))
+        case None      => imp.foreach(_.setRoi(null.asInstanceOf[Roi]))
+      }
+    }
+
+    imp.foreach(_.setOverlay(null))
+
+    IJ.showStatus(s"$Title: Result")
   }
 }

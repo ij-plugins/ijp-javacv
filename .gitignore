@@ -3,3 +3,5 @@ target/
 sandbox/
 /null/
 /.bsp/
+.DS_Store
+/_local_/
