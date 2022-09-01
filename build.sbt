@@ -2,7 +2,7 @@ import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
 lazy val _version       = "0.4.2.1-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.8", "3.0.2", "3.1.3")
+lazy val _scalaVersions = Seq("2.13.8", "3.0.2", "3.2.0")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name := "ijp-javacv"
@@ -69,7 +69,7 @@ val commonSettings = Seq(
     "org.bytedeco" % "opencv" % "4.5.5-1.5.7" classifier platform,
     "org.bytedeco" % "openblas" % "0.3.19-1.5.7" withSources() withJavadoc(),
     "org.bytedeco" % "openblas" % "0.3.19-1.5.7" classifier platform,
-    "net.imagej" % "ij" % "1.53s",
+    "net.imagej" % "ij" % "1.53t",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
@@ -86,8 +86,8 @@ val commonSettings = Seq(
       case Some(path) => Seq("-diagrams", "-diagrams-dot-path", path, "-diagrams-debug")
       case None => Seq.empty[String]
     }),
+  resolvers ++= Resolver.sonatypeOssRepos("snapshots"),
   resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots"),
     // ImageJ repo for mpicbg
     "ImageJ Releases" at "https://maven.imagej.net/content/repositories/releases/",
     // Use local maven repo for local javacv builds
