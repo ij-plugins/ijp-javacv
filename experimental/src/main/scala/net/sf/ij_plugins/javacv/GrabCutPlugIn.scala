@@ -108,6 +108,8 @@ class GrabCutPlugIn extends PlugIn {
 
     if (dialog.wasOKed()) {
       showFinalResult()
+      gci.foreach(_.close())
+      gci = None
     } else {
       // Restore original ROI
       imp.foreach(_.setOverlay(null))

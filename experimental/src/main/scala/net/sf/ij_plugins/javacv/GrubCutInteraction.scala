@@ -7,14 +7,23 @@
 package net.sf.ij_plugins.javacv
 
 import ij.gui.Roi
-import ij.process.{ByteProcessor, ImageProcessor}
+import ij.process.{ByteProcessor, ColorProcessor}
 import ij.{IJ, ImagePlus}
 import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.opencv_core.{Mat, Rect}
 
 import java.awt.Rectangle
 
-class GrubCutInteraction(ip: ImageProcessor) {
+/**
+ * Provides interaction with OpenCV implementation of GrubCut algorithm,
+ * hiding any native memory and resources management.
+ *
+ * @param ip input image to be segmented.
+ */
+class GrubCutInteraction(ip: ColorProcessor) extends AutoCloseable {
+
+  /** Instance is 'open' is resouces are still allocated, before `close()` was called. */
+  private var isOpen = true
 
   private val image = IJOpenCVConverters.toMat(ip)
 
@@ -25,6 +34,7 @@ class GrubCutInteraction(ip: ImageProcessor) {
   private val fgdModel = new Mat()
 
   def initialRun(rect: Rectangle): Unit = {
+    validate()
 
     val rectangle = new Rect(rect.x, rect.y, rect.width, rect.height)
 
@@ -35,6 +45,7 @@ class GrubCutInteraction(ip: ImageProcessor) {
   }
 
   def update(): Unit = {
+    validate()
 
     if (IJ.debugMode) new ImagePlus("Input", IJOpenCVConverters.toImageProcessor(result)).show()
 
@@ -44,18 +55,24 @@ class GrubCutInteraction(ip: ImageProcessor) {
   }
 
   def addToForeground(roi: Roi): Unit = {
+    validate()
+
     val resultIP = IJOpenCVConverters.toImageProcessor(result)
     resultIP.setValue(GC_FGD)
     resultIP.fill(roi)
 
+    result.close()
     result = IJOpenCVConverters.toMat(resultIP)
   }
 
   def addToBackground(roi: Roi): Unit = {
+    validate()
+
     val resultIP = IJOpenCVConverters.toImageProcessor(result)
     resultIP.setValue(GC_BGD)
     resultIP.fill(roi)
 
+    result.close()
     result = IJOpenCVConverters.toMat(resultIP)
   }
 
@@ -64,8 +81,22 @@ class GrubCutInteraction(ip: ImageProcessor) {
   def probableBackgroundRoi: Roi = extractROI(GC_PR_BGD)
   def probableForegroundRoi: Roi = extractROI(GC_PR_FGD)
 
+  override def close(): Unit = {
+    isOpen = false
+    image.close()
+    result.close()
+    bgdModel.close()
+    fgdModel.close()
+  }
+
   private def extractROI(level: Int): Roi = {
     val ip = IJOpenCVConverters.toImageProcessor(result).asInstanceOf[ByteProcessor]
     IJUtils.toRoi(ip, level, level)
+  }
+
+  private def validate(): Unit = {
+    if (!isOpen) {
+      throw new IllegalStateException(s"This instance of 'GrubCutInteraction' was already closed.")
+    }
   }
 }
