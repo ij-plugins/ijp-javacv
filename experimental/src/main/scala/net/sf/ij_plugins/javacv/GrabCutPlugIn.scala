@@ -8,7 +8,7 @@ package net.sf.ij_plugins.javacv
 
 import ij.gui.{NonBlockingGenericDialog, Overlay, Roi}
 import ij.plugin.PlugIn
-import ij.process.ImageProcessor
+import ij.process.ColorProcessor
 import ij.{IJ, ImagePlus}
 
 import java.awt.Color
@@ -32,18 +32,23 @@ class GrabCutPlugIn extends PlugIn {
     imp = Option(IJ.getImage)
     imp match {
       case Some(imp) =>
-        Option(imp.getRoi) match {
-          case Some(roi) =>
-            interact(imp.getProcessor, roi)
-          case None =>
-            IJ.error(Title, "ROI enclosing the object is required.")
+        imp.getProcessor match {
+          case cp: ColorProcessor =>
+            Option(imp.getRoi) match {
+              case Some(roi) =>
+                interact(cp.convertToColorProcessor(), roi)
+              case None =>
+                IJ.error(Title, "ROI enclosing the object is required.")
+            }
+          case _ =>
+            IJ.error(Title, "GrubCut requires color image.")
         }
       case None =>
         IJ.noImage()
     }
   }
 
-  def interact(ip: ImageProcessor, roi: Roi): Unit = {
+  def interact(ip: ColorProcessor, roi: Roi): Unit = {
     IJ.showStatus(s"$Title: Starting")
 
     gci = Option(new GrubCutInteraction(ip))
