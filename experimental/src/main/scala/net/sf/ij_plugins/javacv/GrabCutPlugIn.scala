@@ -1,7 +1,23 @@
 /*
- * Copyright (c) 2011-2022 Jarek Sacha. All Rights Reserved.
+ * Image/J Plugins
+ * Copyright (C) 2002-2022 Jarek Sacha
+ * Author's email: jpsacha at gmail dot com
  *
- * Author's e-mail: jpsacha at gmail.com
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Latest release available at http://sourceforge.net/projects/ij-plugins/
  */
 
 package net.sf.ij_plugins.javacv
@@ -48,14 +64,18 @@ class GrabCutPlugIn extends PlugIn {
     }
   }
 
-  def interact(ip: ColorProcessor, roi: Roi): Unit = {
-    IJ.showStatus(s"$Title: Starting")
+  private def interact(ip: ColorProcessor, roi: Roi): Unit = {
+    IJ.showStatus(s"$Title: Starting...")
+    IJ.showProgress(0.1)
 
     gci = Option(new GrubCutInteraction(ip))
 
-    IJ.showStatus(s"$Title: Run initial segmentation")
+    IJ.showStatus(s"$Title: Running initial segmentation...")
+    IJ.showProgress(0.2)
     gci.foreach(_.initialRun(roi.getBounds))
+    IJ.showProgress(0.9)
     updateDisplay()
+    IJ.showProgress(1.01)
 
     val dialog = new NonBlockingGenericDialog(Title)
     dialog.addButton(
@@ -87,20 +107,26 @@ class GrabCutPlugIn extends PlugIn {
     dialog.addButton(
       "Update GrubCut",
       (_) => {
-        IJ.showStatus(s"$Title: Update GrubCut")
+        IJ.showStatus(s"$Title: Updating GrubCut...")
 
         // Add BKG and FRG modifications
+        IJ.showProgress(0.01)
 
         frgROIAddition.foreach(roi => gci.foreach(_.addToForeground(roi)))
         frgROIAddition = None
+        IJ.showProgress(0.05)
 
         bkgROIAddition.foreach(roi => gci.foreach(_.addToBackground(roi)))
         bkgROIAddition = None
+        IJ.showProgress(0.1)
 
-        IJ.showStatus(s"$Title: Run GrubCut")
+        IJ.showStatus(s"$Title: Running GrubCut...")
         gci.foreach(_.update())
+        IJ.showProgress(0.9)
 
         updateDisplay()
+        IJ.showProgress(1.01)
+        IJ.showStatus("")
       }
     )
 
@@ -121,7 +147,7 @@ class GrabCutPlugIn extends PlugIn {
 
     val bkgOverlay = new Overlay()
 
-    IJ.showStatus(s"$Title: Display results")
+    IJ.showStatus(s"$Title: Displaying results")
     gci.foreach { gc =>
       IJUtils
         .add(gc.backgroundRoi, gc.probableBackgroundRoi)
@@ -147,6 +173,7 @@ class GrabCutPlugIn extends PlugIn {
 
     imp.foreach(_.setRoi(null.asInstanceOf[Roi]))
     imp.foreach(_.setOverlay(bkgOverlay))
+    IJ.showStatus("")
   }
 
   private def addFill(overlay: Overlay, roi: Roi, color: Color, transparency: Int, name: String): Unit = {
