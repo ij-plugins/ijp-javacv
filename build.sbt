@@ -61,20 +61,22 @@ val commonSettings = Seq(
   javacOptions ++= Seq("-deprecation", "-Xlint"),
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
   classpathTypes += "maven-plugin",
+  // @formatter:off
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp" % "1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "javacpp" % "1.5.7" classifier platform,
-    "org.bytedeco" % "javacv" % "1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv" % "4.5.5-1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv" % "4.5.5-1.5.7" classifier platform,
-    "org.bytedeco" % "openblas" % "0.3.19-1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "openblas" % "0.3.19-1.5.7" classifier platform,
-    "net.imagej" % "ij" % "1.53t",
+    "org.bytedeco" % "javacpp"  % "1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "javacpp"  % "1.5.8" classifier platform,
+    "org.bytedeco" % "javacv"   % "1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" classifier platform,
+    "org.bytedeco" % "openblas" % "0.3.21-1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "openblas" % "0.3.21-1.5.8" classifier platform,
+    "net.imagej"   % "ij"       % "1.53u",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
     "org.scalatest" %% "scalatest" % "3.2.11" % "test",
     ),
+  // @formatter:on
   Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
   Compile / doc / scalacOptions ++= Opts.doc.version(_version),
   Compile / doc / scalacOptions ++= Seq(
@@ -115,10 +117,6 @@ val commonSettings = Seq(
     Developer(id = "jpsacha", name = "Jarek Sacha", email = "jpsacha@gmail.com", url = url("https://github.com/jpsacha"))
     )
   )
-
-// Resolvers
-lazy val sonatypeNexusSnapshots = Resolver.sonatypeRepo("snapshots")
-lazy val sonatypeNexusStaging   = "Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
 
 lazy val ijp_javacv_core =
   project
