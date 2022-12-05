@@ -1,7 +1,7 @@
 import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
-lazy val _version       = "0.4.2.2-SNAPSHOT"
+lazy val _version       = "0.4.2.3-SNAPSHOT"
 lazy val _scalaVersions = Seq("2.13.10", "3.0.2", "3.2.1")
 lazy val _scalaVersion  = _scalaVersions.head
 
@@ -70,7 +70,7 @@ val commonSettings = Seq(
     "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" classifier platform,
     "org.bytedeco" % "openblas" % "0.3.21-1.5.8" withSources() withJavadoc(),
     "org.bytedeco" % "openblas" % "0.3.21-1.5.8" classifier platform,
-    "net.imagej"   % "ij"       % "1.53u",
+    "net.imagej"   % "ij"       % "1.53v",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
