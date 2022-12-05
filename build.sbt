@@ -74,7 +74,7 @@ val commonSettings = Seq(
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest" % "3.2.11" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.14" % "test",
     ),
   // @formatter:on
   Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
