@@ -20,11 +20,13 @@
  * Latest release available at http://sourceforge.net/projects/ij-plugins/
  */
 
-package ij_plugins.javacv
+package ij_plugins.javacv.imgproc
 
 import ij.gui.Roi
 import ij.process.{ByteProcessor, ColorProcessor}
 import ij.{IJ, ImagePlus}
+import ij_plugins.javacv.IJOpenCVConverters
+import ij_plugins.javacv.util.IJUtils
 import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.opencv_core.{Mat, Rect}
 

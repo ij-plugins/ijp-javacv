@@ -20,7 +20,7 @@
  * Latest release available at http://sourceforge.net/projects/ij-plugins/
  */
 
-package ij_plugins.javacv
+package ij_plugins.javacv.util
 
 import ij.ImagePlus
 import ij.gui.{Roi, ShapeRoi}

@@ -20,12 +20,14 @@
  * Latest release available at http://sourceforge.net/projects/ij-plugins/
  */
 
-package ij_plugins.javacv
+package ij_plugins.javacv.imgproc
 
 import ij.gui.{NonBlockingGenericDialog, Overlay, Roi}
 import ij.plugin.PlugIn
 import ij.process.ColorProcessor
 import ij.{IJ, ImagePlus}
+import ij_plugins.javacv.imgproc.GrubCutInteraction
+import ij_plugins.javacv.util.{IJPUtils, IJUtils}
 
 import java.awt.Color
 
@@ -77,7 +79,19 @@ class GrabCutPlugIn extends PlugIn {
     updateDisplay()
     IJ.showProgress(1.01)
 
+    val message =
+      """
+        | <html>
+        | Segments foreground object.<br>
+        | Requires rectangular ROI to perform initial segmentation.<br>
+        | After initial segmentation you can mark additional ROIs as elements of the <br>
+        | foreground or background.<br>
+        | Clicking "OK" with create final selection.<br>
+        | </html>
+        |""".stripMargin
+
     val dialog = new NonBlockingGenericDialog(Title)
+    dialog.addPanel(IJPUtils.createInfoPanel(Title, message))
     dialog.addButton(
       "Add to Foreground",
       (_) => {
@@ -105,7 +119,7 @@ class GrabCutPlugIn extends PlugIn {
     )
 
     dialog.addButton(
-      "Update GrubCut",
+      "Update Preview",
       (_) => {
         IJ.showStatus(s"$Title: Updating GrubCut...")
 
