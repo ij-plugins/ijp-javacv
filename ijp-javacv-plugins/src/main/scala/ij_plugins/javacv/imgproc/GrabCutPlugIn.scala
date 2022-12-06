@@ -83,7 +83,6 @@ class GrabCutPlugIn extends PlugIn {
       """
         | <html>
         | Segments foreground object.<br>
-        | Requires rectangular ROI to perform initial segmentation.<br>
         | After initial segmentation you can mark additional ROIs as elements of the <br>
         | foreground or background.<br>
         | Clicking "OK" with create final selection.<br>
