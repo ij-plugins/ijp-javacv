@@ -138,9 +138,7 @@ lazy val ijp_javacv_plugins =
       commonSettings,
       name := "ijp-javacv-plugins",
       description := "IJP JavaCV ImageJ Plugins",
-      publishArtifact := false,
-      publish / skip := true,
-      )
+    )
     .dependsOn(ijp_javacv_core)
 
 lazy val examples =
