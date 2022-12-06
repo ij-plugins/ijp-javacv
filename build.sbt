@@ -124,11 +124,7 @@ lazy val ijp_javacv_core =
     .settings(
       commonSettings,
       name := "ijp-javacv-core",
-      description := "IJP JavaCV Core",
-      publish / skip := (CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((3, x)) if x > 0 => true
-        case _ => false
-      }),
+      description := "IJP JavaCV Core"
       )
 
 lazy val ijp_javacv_plugins =
