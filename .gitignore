@@ -5,3 +5,4 @@ sandbox/
 /.bsp/
 .DS_Store
 /_local_/
+/.run/
