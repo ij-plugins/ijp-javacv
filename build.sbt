@@ -1,8 +1,8 @@
 import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
-lazy val _version       = "0.4.2"
-lazy val _scalaVersions = Seq("2.13.8", "3.0.2", "3.1.3")
+lazy val _version       = "0.4.2.3-SNAPSHOT"
+lazy val _scalaVersions = Seq("3.2.1", "2.13.10")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name := "ijp-javacv"
@@ -61,20 +61,22 @@ val commonSettings = Seq(
   javacOptions ++= Seq("-deprecation", "-Xlint"),
   // Some dependencies like `javacpp` are packaged with maven-plugin packaging
   classpathTypes += "maven-plugin",
+  // @formatter:off
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp" % "1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "javacpp" % "1.5.7" classifier platform,
-    "org.bytedeco" % "javacv" % "1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv" % "4.5.5-1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv" % "4.5.5-1.5.7" classifier platform,
-    "org.bytedeco" % "openblas" % "0.3.19-1.5.7" withSources() withJavadoc(),
-    "org.bytedeco" % "openblas" % "0.3.19-1.5.7" classifier platform,
-    "net.imagej" % "ij" % "1.53s",
+    "org.bytedeco" % "javacpp"  % "1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "javacpp"  % "1.5.8" classifier platform,
+    "org.bytedeco" % "javacv"   % "1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" classifier platform,
+    "org.bytedeco" % "openblas" % "0.3.21-1.5.8" withSources() withJavadoc(),
+    "org.bytedeco" % "openblas" % "0.3.21-1.5.8" classifier platform,
+    "net.imagej"   % "ij"       % "1.53v",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest" % "3.2.11" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.14" % "test",
     ),
+  // @formatter:on
   Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
   Compile / doc / scalacOptions ++= Opts.doc.version(_version),
   Compile / doc / scalacOptions ++= Seq(
@@ -86,8 +88,8 @@ val commonSettings = Seq(
       case Some(path) => Seq("-diagrams", "-diagrams-dot-path", path, "-diagrams-debug")
       case None => Seq.empty[String]
     }),
+  resolvers ++= Resolver.sonatypeOssRepos("snapshots"),
   resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots"),
     // ImageJ repo for mpicbg
     "ImageJ Releases" at "https://maven.imagej.net/content/repositories/releases/",
     // Use local maven repo for local javacv builds
@@ -115,10 +117,6 @@ val commonSettings = Seq(
     Developer(id = "jpsacha", name = "Jarek Sacha", email = "jpsacha@gmail.com", url = url("https://github.com/jpsacha"))
     )
   )
-
-// Resolvers
-lazy val sonatypeNexusSnapshots = Resolver.sonatypeRepo("snapshots")
-lazy val sonatypeNexusStaging   = "Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
 
 lazy val ijp_javacv_core =
   project
