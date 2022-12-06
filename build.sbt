@@ -2,7 +2,7 @@ import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
 lazy val _version       = "0.4.2.3-SNAPSHOT"
-lazy val _scalaVersions = Seq("2.13.10", "3.0.2", "3.2.1")
+lazy val _scalaVersions = Seq("3.2.1", "2.13.10")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name := "ijp-javacv"
