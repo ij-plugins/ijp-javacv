@@ -103,7 +103,7 @@ object IJPUtils {
     // TODO: use icon with rounded corners
     val rootPanel  = new Panel(new BorderLayout(7, 7))
     val titlePanel = new Panel(new BorderLayout(7, 7))
-    val logo       = IJPUtils.loadIcon(this.getClass, "/net/sf/ij_plugins/javacv/IJP-48.png")
+    val logo       = IJPUtils.loadIcon(this.getClass, "/ij_plugins/javacv/IJP-48.png")
     if (logo != null) {
       val logoLabel = new JLabel(logo, SwingConstants.CENTER)
       logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT)
