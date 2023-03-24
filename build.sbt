@@ -70,7 +70,7 @@ val commonSettings = Seq(
     "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" classifier platform,
     "org.bytedeco" % "openblas" % "0.3.21-1.5.8" withSources() withJavadoc(),
     "org.bytedeco" % "openblas" % "0.3.21-1.5.8" classifier platform,
-    "net.imagej"   % "ij"       % "1.53v",
+    "net.imagej"   % "ij"       % "1.54c",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
