@@ -1,6 +1,6 @@
 /*
  * Image/J Plugins
- * Copyright (C) 2002-2022 Jarek Sacha
+ * Copyright (C) 2002-2023 Jarek Sacha
  * Author's email: jpsacha at gmail dot com
  *
  * This library is free software; you can redistribute it and/or
@@ -60,30 +60,6 @@ object OpenCVUtils {
    * @return current version of the OpenCV library
    */
   def initJavaCV(): String = CV_VERSION
-
-  /**
-   * Load an image.
-   *
-   * @param flags Flags specifying the color type of a loaded image:
-   *              <ul>
-   *              <li> `>0` Return a 3-channel color image</li>
-   *              <li> `=0` Return a gray scale image</li>
-   *              <li> `<0` Return the loaded image as is. Note that in the current implementation
-   *              the alpha channel, if any, is stripped from the output image. For example, a 4-channel
-   *              RGBA image is loaded as RGB if the `flags` is greater than 0.</li>
-   *              </ul>
-   *              Default is gray scale.
-   * @return loaded image
-   * @throws IOException if image cannot be loaded
-   */
-  def load(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
-    // Read input image
-    val image = imread(file.getAbsolutePath, flags)
-    if (image.empty()) {
-      throw new IOException("Couldn't load image: " + file.getAbsolutePath)
-    }
-    image
-  }
 
   /**
    * Assume that image may contain multiple pages (slices). It is using OpenCV `imreadmulti` internally.
@@ -147,6 +123,22 @@ object OpenCVUtils {
     image
   }
 
+  /** Show image in a window. Closing the window will exit the application. */
+  def show(mat: Mat, title: String): Unit = {
+    val canvas = new CanvasFrame(title, 1)
+    canvas.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
+    canvas.showImage(toBufferedImage(mat))
+  }
+
+  def toBufferedImage(mat: Mat): BufferedImage = {
+    Using.Manager { use =>
+      val openCVCvt = use(new OpenCVFrameConverter.ToMat())
+      val frame     = use(openCVCvt.convert(mat))
+      val java2DCvt = use(new Java2DFrameConverter())
+      java2DCvt.convert(frame)
+    }.get
+  }
+
   /**
    * Load an image. If image cannot be loaded the application will exit with code 1.
    *
@@ -174,11 +166,28 @@ object OpenCVUtils {
     image
   }
 
-  /** Show image in a window. Closing the window will exit the application. */
-  def show(mat: Mat, title: String): Unit = {
-    val canvas = new CanvasFrame(title, 1)
-    canvas.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
-    canvas.showImage(toBufferedImage(mat))
+  /**
+   * Load an image.
+   *
+   * @param flags Flags specifying the color type of a loaded image:
+   *              <ul>
+   *              <li> `>0` Return a 3-channel color image</li>
+   *              <li> `=0` Return a gray scale image</li>
+   *              <li> `<0` Return the loaded image as is. Note that in the current implementation
+   *              the alpha channel, if any, is stripped from the output image. For example, a 4-channel
+   *              RGBA image is loaded as RGB if the `flags` is greater than 0.</li>
+   *              </ul>
+   *              Default is gray scale.
+   * @return loaded image
+   * @throws IOException if image cannot be loaded
+   */
+  def load(file: File, flags: Int = IMREAD_UNCHANGED): Mat = {
+    // Read input image
+    val image = imread(file.getAbsolutePath, flags)
+    if (image.empty()) {
+      throw new IOException("Couldn't load image: " + file.getAbsolutePath)
+    }
+    image
   }
 
   /** Show image in a window. Closing the window will exit the application. */
@@ -280,15 +289,6 @@ object OpenCVUtils {
     for (i <- Array.range(0, n)) yield new DMatch(matches.get(i))
   }
 
-  def toBufferedImage(mat: Mat): BufferedImage = {
-    Using.Manager { use =>
-      val openCVCvt = use(new OpenCVFrameConverter.ToMat())
-      val frame     = use(openCVCvt.convert(mat))
-      val java2DCvt = use(new Java2DFrameConverter())
-      java2DCvt.convert(frame)
-    }.get
-  }
-
   def toDMatchVector(src: Seq[DMatch]): DMatchVector = {
     val dest = new DMatchVector(src.size)
     for ((m, i) <- src.toArray.zipWithIndex) {
@@ -307,12 +307,7 @@ object OpenCVUtils {
    * @return copy of the input with pixels values represented as 8 bit unsigned integers.
    */
   def toMat8U(src: Mat, doScaling: Boolean = true): Mat = {
-    val minVal = new DoublePointer(Double.MaxValue)
-    val maxVal = new DoublePointer(Double.MinValue)
-    minMaxLoc(src, minVal, maxVal, null, null, new Mat())
-
-    val min = minVal.get()
-    val max = maxVal.get()
+    val (min, max) = minMax(src)
 
     val (scale, offset) =
       if (doScaling) {
@@ -323,6 +318,20 @@ object OpenCVUtils {
     val dest = new Mat()
     src.convertTo(dest, CV_8U, scale, offset)
     dest
+  }
+
+  /**
+   * Get minimum and maximum value in input `Mat`. Helper for using `opencv_core.minMaxLoc()`.
+   *
+   * @param mat input
+   * @return tuple (min, max)
+   */
+  def minMax(mat: Mat): (Double, Double) = {
+    val minVal = new DoublePointer(Double.MaxValue)
+    val maxVal = new DoublePointer(Double.MinValue)
+    minMaxLoc(mat, minVal, maxVal, null, null, new Mat())
+
+    (minVal.get(), maxVal.get())
   }
 
   def toMatPoint2f(points: Seq[Point2f]): Mat = {
