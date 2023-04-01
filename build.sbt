@@ -134,6 +134,15 @@ lazy val ijp_javacv_plugins =
       commonSettings,
       name := "ijp-javacv-plugins",
       description := "IJP JavaCV ImageJ Plugins",
+      libraryDependencies ++= Seq("com.beachape" %% "enumeratum" % "1.7.2"),
+      scalacOptions ++=
+        (if (isScala2(scalaVersion.value))
+          Seq.empty[String]
+        else
+          Seq(
+            "-Yretain-trees" // Required by "enumeratum"
+            )
+          ),
       )
     .dependsOn(ijp_javacv_core)
 
