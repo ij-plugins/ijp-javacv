@@ -22,11 +22,16 @@
 
 package ij_plugins.javacv.mcc
 
+import ij.ImagePlus
+import ij.gui.{PolygonRoi, Roi}
+import ij.process.{ByteProcessor, ColorProcessor, ImageProcessor}
 import org.bytedeco.javacpp.indexer.FloatIndexer
 import org.bytedeco.javacpp.{FloatPointer, IntPointer, PointerPointer}
 import org.bytedeco.opencv.global.opencv_core.{CV_16U, CV_8U, merge, split}
 import org.bytedeco.opencv.global.opencv_imgproc.calcHist
-import org.bytedeco.opencv.opencv_core.{Mat, MatVector, Scalar}
+import org.bytedeco.opencv.opencv_core.{Mat, MatVector, Point2fVector, Scalar}
+
+import scala.util.control.NonFatal
 
 object Utils {
 
@@ -126,6 +131,127 @@ object Utils {
     merge(bandsDest, dst)
 
     dst
+  }
+
+  def toPolygonRoi(points: Point2fVector): PolygonRoi = {
+    val nPoints: Int = points.size().toInt
+    val xPoints      = new Array[Float](nPoints)
+    val yPoints      = new Array[Float](nPoints)
+    for (i <- 0 until nPoints) {
+      val p2f = points.get(i)
+      xPoints(i) = p2f.x()
+      yPoints(i) = p2f.y()
+    }
+
+    new PolygonRoi(xPoints, yPoints, nPoints, Roi.POLYGON)
+  }
+
+  /**
+   * Convert input image to RGB24 color image. In input is stack of grey image they will be scaled fir 0-256 range.
+   *
+   * @param imp contains one color image (4b-bit or indexed 8-bit) or a stack of 3 gray images interpreted as RGB bands.
+   * @return RGB24 color imageRGB24 color image
+   * @throws IllegalArgumentException if inout image is in a format that cannot be interpreted as a RGB color image
+   */
+  def toColorProcessor(imp: ImagePlus): ColorProcessor = {
+    val stackSize = imp.getStackSize
+    imp.getType match {
+      case ImagePlus.COLOR_256 | ImagePlus.COLOR_RGB if stackSize == 1 =>
+        imp.getProcessor.convertToColorProcessor()
+      case ImagePlus.GRAY8 | ImagePlus.GRAY16 | ImagePlus.GRAY32 if stackSize == 3 =>
+        val stack = imp.getStack
+        val bands = (1 to stack.size()).map(stack.getProcessor).toArray
+        try {
+          mergeRGB(bands, doScaling = true)
+        } catch {
+          case NonFatal(ex) =>
+            throw new IllegalArgumentException(s"Failed to create RGB24 image. ${ex.getMessage}")
+        }
+      case _ =>
+        throw new IllegalArgumentException("Required Color image or stack of 3 gray images.\n" +
+          s"Got image type ${imp.getType} and ${stackSize} slices")
+    }
+  }
+
+  /**
+   * Merges RGB bands into a ColorProcessor.
+   *
+   * @param src `ImageProcessor`s for red, green, and blue band. `ImageProcessor`s cannot be `ColorProcessors`
+   * @return merged bands
+   * @see #splitRGB
+   * @see ij_plugins.color.util.ImageJUtils#mergeRGB
+   */
+  private def mergeRGB(src: Array[ImageProcessor], doScaling: Boolean): ColorProcessor = {
+    validateSameTypeAndDimensions(src, 3)
+    require(!src(0).isInstanceOf[ColorProcessor], "Cannot convert stack of ColorProcessor to a ColorProcessor")
+
+    mergeRGB(Array.range(0, 3).map(src(_).convertToByte(doScaling).asInstanceOf[ByteProcessor]))
+  }
+
+  /**
+   * Merges RGB bands into a ColorProcessor.
+   *
+   * @param src ByteProcessor for red, green, and blue band.
+   * @return merged bands
+   * @see #splitRGB
+   * @see ij_plugins.color.util.ImageJUtils#mergeRGB
+   */
+  private def mergeRGB(src: Array[ByteProcessor]): ColorProcessor = {
+    validateSameTypeAndDimensions(src, 3)
+
+    val width  = src(0).getWidth
+    val height = src(0).getHeight
+    val dest   = new ColorProcessor(width, height)
+    dest.setRGB(
+      src(0).getPixels.asInstanceOf[Array[Byte]],
+      src(1).getPixels.asInstanceOf[Array[Byte]],
+      src(2).getPixels.asInstanceOf[Array[Byte]]
+    )
+    dest
+  }
+
+  /**
+   * @param src
+   * images to validate
+   * @param length
+   * expected number of images
+   * @tparam T
+   * image processor type
+   * @throws java.lang.IllegalArgumentException
+   * if the images in the array are not of the same dimension.
+   * @see ij_plugins.color.util.ImageJUtils#validateSameDimensions
+   */
+  @inline
+  private def validateSameTypeAndDimensions[T <: ImageProcessor](src: Array[T], length: Int): Unit = {
+    validateSameDimensions(src, length)
+    if (length > 1) {
+      val t = src(0).getClass
+      require(src.tail.forall(_.getClass == t), "All input images must be of the same type.")
+    }
+  }
+
+  /**
+   * @param src    images to validate
+   * @param length expected number of images
+   * @tparam T image processor type
+   * @throws java.lang.IllegalArgumentException if the images in the array are not of the same dimension.
+   * @see ij_plugins.color.util.ImageJUtils#validateSameDimensions
+   */
+  @inline
+  private def validateSameDimensions[T <: ImageProcessor](src: Array[T], length: Int): Unit = {
+    require(src != null, "Input cannot be null.")
+    require(src.length == length, "Input array has to have " + length + " elements.")
+    require(!src.contains(null.asInstanceOf[T]), "Input array cannot have null entries.")
+    val width  = src(0).getWidth
+    val height = src(0).getHeight
+    require(
+      src.forall(width == _.getWidth),
+      "All input images have to have the same width: " + src.map(_.getWidth).mkString(",")
+    )
+    require(
+      src.forall(height == _.getHeight),
+      "All input images have to have the same height: " + src.map(_.getHeight).mkString(",")
+    )
   }
 
 }

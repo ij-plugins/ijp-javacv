@@ -27,11 +27,12 @@ import ij.plugin.PlugIn
 import ij.process.ColorProcessor
 import ij.{IJ, ImagePlus}
 import ij_plugins.javacv.IJOpenCVConverters
-import ij_plugins.javacv.mcc.Utils.scalar
-import ij_plugins.javacv.plugins.mcc.Utils.toColorProcessor
+import ij_plugins.javacv.mcc.Utils.{scalar, toColorProcessor, toPolygonRoi}
 import ij_plugins.javacv.util.{IJPUtils, OpenCVUtils}
 import org.bytedeco.opencv.opencv_core.Point2fVector
 import org.bytedeco.opencv.opencv_mcc.{CCheckerDetector, CCheckerDraw, DetectorParameters}
+
+import scala.util.control.NonFatal
 
 object ColorCheckerDetectorPlugin {
 
@@ -55,7 +56,7 @@ class ColorCheckerDetectorPlugin extends PlugIn {
     imp = Option(IJ.getImage)
     imp match {
       case Some(imp) =>
-        toColorProcessor(imp) match {
+        toColorProcessorEither(imp) match {
           case Right(cp)     => askForOptionsAndProcess(cp)
           case Left(message) => IJ.error(Title, message)
         }
@@ -94,18 +95,7 @@ class ColorCheckerDetectorPlugin extends PlugIn {
 
     if (hasChart) {
       val checker = ccheckerDetector.getListColorChecker.get(0)
-
-      val box: Point2fVector = checker.getBox
-      val nPoints: Int       = box.size().toInt
-      val xPoints            = new Array[Float](nPoints)
-      val yPoints            = new Array[Float](nPoints)
-      for (i <- 0 until nPoints) {
-        val p2f = box.get(i)
-        xPoints(i) = p2f.x()
-        yPoints(i) = p2f.y()
-      }
-
-      val roi = new PolygonRoi(xPoints, yPoints, nPoints, Roi.POLYGON)
+      val roi     = toPolygonRoi(checker.getBox)
       imp.foreach(_.setRoi(roi))
 
       if (IJ.debugMode) {
@@ -117,6 +107,15 @@ class ColorCheckerDetectorPlugin extends PlugIn {
       }
     } else
       IJ.showMessage(Title, "No chart detected")
+  }
+
+  private def toColorProcessorEither(imp: ImagePlus): Either[String, ColorProcessor] = {
+    try {
+      Right(toColorProcessor(imp))
+    } catch {
+      case NonFatal(ex) =>
+        Left(ex.getMessage)
+    }
   }
 
 }
