@@ -146,17 +146,42 @@ lazy val ijp_javacv_plugins =
       )
     .dependsOn(ijp_javacv_core)
 
-lazy val examples =
+lazy val examples_ij =
   project
-    .in(file("examples"))
+    .in(file("Examples-ImageJ"))
     .settings(
       commonSettings,
       name := "examples",
-      description := "IJP JavaCV Examples",
+      description := "IJP JavaCV Examples for ImageJ in Scala",
       publishArtifact := false,
       publish / skip := true,
       )
     .dependsOn(ijp_javacv_plugins)
+
+lazy val examples_ij_java =
+  project
+    .in(file("Examples-ImageJ-Java"))
+    .settings(
+      commonSettings,
+      name := "examples",
+      description := "IJP JavaCV Examples for ImageJ in Java",
+      publishArtifact := false,
+      publish / skip := true,
+      )
+    .dependsOn(ijp_javacv_plugins)
+
+
+lazy val examples_cli =
+  project
+    .in(file("Examples-CLI"))
+    .settings(
+      commonSettings,
+      name := "examples",
+      description := "IJP JavaCV Examples for Scala CLI or Worksheet",
+      publishArtifact := false,
+      publish / skip := true,
+      )
+    .dependsOn(ijp_javacv_core)
 
 // The 'experimental' is not a part of distribution.
 // It is intended for ImageJ with plugins and fast local experimentation with new features.
@@ -165,6 +190,9 @@ lazy val experimental = project
   .settings(
     commonSettings,
     name := "experimental",
+    libraryDependencies ++= Seq(
+      "net.sf.ij-plugins" %% "scala-console-plugins" % "1.7.1"
+    ),
     // Do not publish this artifact
     publishArtifact := false,
     publish / skip := true,
