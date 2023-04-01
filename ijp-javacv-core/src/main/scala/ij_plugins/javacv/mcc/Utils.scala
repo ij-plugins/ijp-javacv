@@ -24,7 +24,7 @@ package ij_plugins.javacv.mcc
 
 import org.bytedeco.javacpp.indexer.FloatIndexer
 import org.bytedeco.javacpp.{FloatPointer, IntPointer, PointerPointer}
-import org.bytedeco.opencv.global.opencv_core.{CV_16U, CV_8U, split, merge}
+import org.bytedeco.opencv.global.opencv_core.{CV_16U, CV_8U, merge, split}
 import org.bytedeco.opencv.global.opencv_imgproc.calcHist
 import org.bytedeco.opencv.opencv_core.{Mat, MatVector, Scalar}
 
@@ -36,40 +36,6 @@ object Utils {
    * This is useful when creating a `Scalar` representing a color.
    */
   def scalar(v0: Double, v1: Double, v2: Double): Scalar = new Scalar(v0, v1, v2, 0)
-
-  /**
-   * Compute histogram of `image` accumulating counts on all bands
-   * @param image input image
-   * @param numberOfBins number of bins in the histogram
-   * @return histogram
-   */
-  def histogram(image: Mat, numberOfBins: Int): Mat = {
-    require(image != null)
-
-    val bands = new MatVector()
-    split(image, bands)
-
-    // Compute histogram
-    val hist = new Mat()
-
-    val intPtrChannels  = new IntPointer(1L).put(0)
-    val intPtrHistSize  = new IntPointer(1L).put(numberOfBins)
-    val histRange       = Array[Float](0, numberOfBins)
-    val ptrPtrHistRange = new PointerPointer[FloatPointer](histRange)
-    for i <- 0 until bands.size().toInt do calcHist(
-      bands.get(i),
-      1,               // histogram of 1 image only
-      intPtrChannels,  // the channel used
-      new Mat(),       // no mask is used
-      hist,            // the resulting histogram
-      1,               // it is a 3D histogram
-      intPtrHistSize,  // number of bins
-      ptrPtrHistRange, // pixel value range
-      true,            // uniform
-      true             // no accumulation
-    )
-    hist
-  }
 
   /**
    * Compute min and max values of `mat` ignoring fraction of `p` pixels with extreme low values
@@ -95,7 +61,7 @@ object Utils {
 
     val er = hist.createIndexer().asInstanceOf[FloatIndexer]
     val a  = new Array[Float](er.sizes()(0).toInt)
-    for i <- a.indices do a(i) = er.get(i)
+    for (i <- a.indices) a(i) = er.get(i)
 
     val nbPixels = mat.size(0) * mat.size(1)
     var sum      = 0.0
@@ -110,6 +76,41 @@ object Utils {
     }
 
     (minV, maxV)
+  }
+
+  /**
+   * Compute histogram of `image` accumulating counts on all bands
+   * @param image input image
+   * @param numberOfBins number of bins in the histogram
+   * @return histogram
+   */
+  def histogram(image: Mat, numberOfBins: Int): Mat = {
+    require(image != null)
+
+    val bands = new MatVector()
+    split(image, bands)
+
+    // Compute histogram
+    val hist = new Mat()
+
+    val intPtrChannels  = new IntPointer(1L).put(0)
+    val intPtrHistSize  = new IntPointer(1L).put(numberOfBins)
+    val histRange       = Array[Float](0, numberOfBins)
+    val ptrPtrHistRange = new PointerPointer[FloatPointer](histRange)
+    for (i <- 0 until bands.size().toInt)
+      calcHist(
+        bands.get(i),
+        1,               // histogram of 1 image only
+        intPtrChannels,  // the channel used
+        new Mat(),       // no mask is used
+        hist,            // the resulting histogram
+        1,               // it is a 3D histogram
+        intPtrHistSize,  // number of bins
+        ptrPtrHistRange, // pixel value range
+        true,            // uniform
+        true             // no accumulation
+      )
+    hist
   }
 
   def reverseSlices(src: Mat): Mat = {
