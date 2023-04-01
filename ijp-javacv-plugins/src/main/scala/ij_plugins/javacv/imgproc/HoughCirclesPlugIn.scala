@@ -1,6 +1,6 @@
 /*
  * Image/J Plugins
- * Copyright (C) 2002-2022 Jarek Sacha
+ * Copyright (C) 2002-2023 Jarek Sacha
  * Author's email: jpsacha at gmail dot com
  *
  * This library is free software; you can redistribute it and/or
@@ -27,8 +27,8 @@ import ij.plugin.filter.{PlugInFilter, PlugInFilterRunner}
 import ij.plugin.frame.RoiManager
 import ij.process.ImageProcessor
 import ij.{IJ, ImagePlus}
-import ij_plugins.javacv.util.{ExtendedPlugInFilterTrait, IJPUtils, OpenCVUtils}
 import ij_plugins.javacv.IJOpenCVConverters.*
+import ij_plugins.javacv.util.{ExtendedPlugInFilterTrait, IJPUtils, OpenCVUtils}
 import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.opencv_imgproc.*
 
@@ -57,9 +57,49 @@ class HoughCirclesPlugIn extends ExtendedPlugInFilterTrait {
 
   import HoughCirclesPlugIn.*
 
+  override def showDialog(imp: ImagePlus, command: String, pfr: PlugInFilterRunner): Int = {
+
+    val message = "" +
+      "Finds circles in a grayscale image using the Hough transform."
+
+    val dialog = new GenericDialog(Title) {
+      addPanel(IJPUtils.createHeaderAWT(Title, message))
+
+      addNumericField("DP", dp, 2, 10, "")
+      addNumericField("minDist", minDist, 2, 10, "pixels")
+      addNumericField("highThreshold", highThreshold, 2, 10, "")
+      addNumericField("votes", votes, 2, 10, "")
+      addNumericField("minRadius", minRadius, 2, 10, "pixels")
+      addNumericField("maxRadius", maxRadius, 2, 10, "pixels")
+      addCheckbox("Send to Results Table", sendToResultsTable)
+
+      addPreviewCheckbox(pfr)
+      addDialogListener(_plugin)
+      this.showDialog()
+    }
+
+    if (dialog.wasCanceled) {
+      return PlugInFilter.DONE
+    }
+
+    IJ.setupDialog(imp, Flags)
+  }
+
   override protected def Flags: Int = PlugInFilter.DOES_8G
 
-  override protected def Title = "OpenCV Hough Circles"
+  override def dialogItemChanged(gd: GenericDialog, e: AWTEvent): Boolean = {
+    //    private var method: Int = HOUGH_GRADIENT
+    dp = gd.getNextNumber
+    minDist = gd.getNextNumber
+    highThreshold = gd.getNextNumber
+    votes = gd.getNextNumber
+    minRadius = scala.math.round(gd.getNextNumber).toInt
+    maxRadius = scala.math.round(gd.getNextNumber).toInt
+
+    sendToResultsTable = gd.getNextBoolean
+
+    true
+  }
 
   /**
    * Method that does actual processing of the image.
@@ -137,47 +177,7 @@ class HoughCirclesPlugIn extends ExtendedPlugInFilterTrait {
     }
   }
 
-  override def showDialog(imp: ImagePlus, command: String, pfr: PlugInFilterRunner): Int = {
-
-    val message = "" +
-      "Finds circles in a grayscale image using the Hough transform."
-
-    val dialog = new GenericDialog(Title) {
-      addPanel(IJPUtils.createInfoPanel(Title, message))
-
-      addNumericField("DP", dp, 2, 10, "")
-      addNumericField("minDist", minDist, 2, 10, "pixels")
-      addNumericField("highThreshold", highThreshold, 2, 10, "")
-      addNumericField("votes", votes, 2, 10, "")
-      addNumericField("minRadius", minRadius, 2, 10, "pixels")
-      addNumericField("maxRadius", maxRadius, 2, 10, "pixels")
-      addCheckbox("Send to Results Table", sendToResultsTable)
-
-      addPreviewCheckbox(pfr)
-      addDialogListener(_plugin)
-      this.showDialog()
-    }
-
-    if (dialog.wasCanceled) {
-      return PlugInFilter.DONE
-    }
-
-    IJ.setupDialog(imp, Flags)
-  }
-
-  override def dialogItemChanged(gd: GenericDialog, e: AWTEvent): Boolean = {
-    //    private var method: Int = HOUGH_GRADIENT
-    dp = gd.getNextNumber
-    minDist = gd.getNextNumber
-    highThreshold = gd.getNextNumber
-    votes = gd.getNextNumber
-    minRadius = scala.math.round(gd.getNextNumber).toInt
-    maxRadius = scala.math.round(gd.getNextNumber).toInt
-
-    sendToResultsTable = gd.getNextBoolean
-
-    true
-  }
+  override protected def Title = "OpenCV Hough Circles"
 
   private def circlesToXYR(circles: Vec3fVector): Seq[(Float, Float, Float)] = {
     for (i <- 0 until circles.size().toInt) yield {

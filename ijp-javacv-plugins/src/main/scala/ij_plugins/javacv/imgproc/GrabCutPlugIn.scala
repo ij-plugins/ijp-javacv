@@ -1,6 +1,6 @@
 /*
  * Image/J Plugins
- * Copyright (C) 2002-2022 Jarek Sacha
+ * Copyright (C) 2002-2023 Jarek Sacha
  * Author's email: jpsacha at gmail dot com
  *
  * This library is free software; you can redistribute it and/or
@@ -90,7 +90,7 @@ class GrabCutPlugIn extends PlugIn {
         |""".stripMargin
 
     val dialog = new NonBlockingGenericDialog(Title)
-    dialog.addPanel(IJPUtils.createInfoPanel(Title, message))
+    dialog.addPanel(IJPUtils.createHeaderAWT(Title, message))
     dialog.addButton(
       "Add to Foreground",
       (_) => {

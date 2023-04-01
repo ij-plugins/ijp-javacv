@@ -1,6 +1,6 @@
 /*
  * Image/J Plugins
- * Copyright (C) 2002-2022 Jarek Sacha
+ * Copyright (C) 2002-2023 Jarek Sacha
  * Author's email: jpsacha at gmail dot com
  *
  * This library is free software; you can redistribute it and/or
@@ -99,7 +99,7 @@ object IJPUtils {
    * @param message message that can contain HTML formatting.
    * @return a panel containing the message with a title and a default icon.
    */
-  def createInfoPanel(title: String, message: String): Panel = {
+  def createHeaderAWT(title: String, message: String): Panel = {
     // TODO: use icon with rounded corners
     val rootPanel  = new Panel(new BorderLayout(7, 7))
     val titlePanel = new Panel(new BorderLayout(7, 7))

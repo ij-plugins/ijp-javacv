@@ -1,6 +1,6 @@
 /*
  * Image/J Plugins
- * Copyright (C) 2002-2022 Jarek Sacha
+ * Copyright (C) 2002-2023 Jarek Sacha
  * Author's email: jpsacha at gmail dot com
  *
  * This library is free software; you can redistribute it and/or
@@ -28,8 +28,8 @@ import ij.plugin.filter.{PlugInFilter, PlugInFilterRunner}
 import ij.plugin.frame.RoiManager
 import ij.process.ImageProcessor
 import ij.{IJ, ImagePlus}
-import ij_plugins.javacv.util.{ExtendedPlugInFilterTrait, IJPUtils, OpenCVUtils}
 import ij_plugins.javacv.IJOpenCVConverters.*
+import ij_plugins.javacv.util.{ExtendedPlugInFilterTrait, IJPUtils, OpenCVUtils}
 import org.bytedeco.opencv.global.opencv_core.CV_PI
 import org.bytedeco.opencv.global.opencv_imgproc.*
 import org.bytedeco.opencv.opencv_core.Point
@@ -57,9 +57,60 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
 
   import HoughLinesPlugIn.*
 
+  override def showDialog(imp: ImagePlus, command: String, pfr: PlugInFilterRunner): Int = {
+
+    val message = "" +
+      "Finds lines in a binary image using the standard Hough transform.\n" +
+      "The Canny Edge Detector is a good way to create input for this plugin."
+
+    val dialog = new GenericDialog(Title) {
+      addPanel(IJPUtils.createHeaderAWT("OpenCV Hough Lines", message))
+
+      addNumericField("Distance_Resolution", distanceResolutionInPixels, 0, 10, "pixels")
+      addNumericField("Angle_Resolution", angleResolutionInDegrees, 2, 10, "degrees")
+      addNumericField("Minimum_Votes", minimumVotes, 0, 10, "")
+      addCheckbox("Send to Results Table", sendToResultsTable)
+
+      addPreviewCheckbox(pfr)
+      addDialogListener(_plugin)
+      this.showDialog()
+    }
+
+    if (dialog.wasCanceled) {
+      return PlugInFilter.DONE
+    }
+
+    IJ.setupDialog(imp, Flags)
+  }
+
   override protected def Flags: Int = PlugInFilter.DOES_8G
 
-  override protected def Title = "Hough Lines"
+  override def dialogItemChanged(gd: GenericDialog, e: AWTEvent): Boolean = {
+    val _distanceResolutionInPixels = scala.math.round(gd.getNextNumber).toInt
+    if (_distanceResolutionInPixels <= 0) {
+      IJ.error(Title, "`Distance Resolution` must be larger than 0.")
+      return false
+    }
+    distanceResolutionInPixels = _distanceResolutionInPixels
+
+    val _angleResolutionInDegrees = gd.getNextNumber
+    if (_angleResolutionInDegrees <= 0) {
+      IJ.error(Title, "`Angle Resolution` must be larger than 0.")
+      return false
+    }
+    angleResolutionInDegrees = _angleResolutionInDegrees
+
+    val _minimumVotes = scala.math.round(gd.getNextNumber).toInt
+    if (_minimumVotes <= 0) {
+      IJ.error(Title, "`Minimum Votes` must be larger than 0.")
+      return false
+    }
+    minimumVotes = _minimumVotes
+
+    sendToResultsTable = gd.getNextBoolean
+
+    true
+  }
 
   /**
    * Method that does actual processing of the image.
@@ -133,58 +184,7 @@ class HoughLinesPlugIn extends ExtendedPlugInFilterTrait {
     }
   }
 
-  override def showDialog(imp: ImagePlus, command: String, pfr: PlugInFilterRunner): Int = {
-
-    val message = "" +
-      "Finds lines in a binary image using the standard Hough transform.\n" +
-      "The Canny Edge Detector is a good way to create input for this plugin."
-
-    val dialog = new GenericDialog(Title) {
-      addPanel(IJPUtils.createInfoPanel("OpenCV Hough Lines", message))
-
-      addNumericField("Distance_Resolution", distanceResolutionInPixels, 0, 10, "pixels")
-      addNumericField("Angle_Resolution", angleResolutionInDegrees, 2, 10, "degrees")
-      addNumericField("Minimum_Votes", minimumVotes, 0, 10, "")
-      addCheckbox("Send to Results Table", sendToResultsTable)
-
-      addPreviewCheckbox(pfr)
-      addDialogListener(_plugin)
-      this.showDialog()
-    }
-
-    if (dialog.wasCanceled) {
-      return PlugInFilter.DONE
-    }
-
-    IJ.setupDialog(imp, Flags)
-  }
-
-  override def dialogItemChanged(gd: GenericDialog, e: AWTEvent): Boolean = {
-    val _distanceResolutionInPixels = scala.math.round(gd.getNextNumber).toInt
-    if (_distanceResolutionInPixels <= 0) {
-      IJ.error(Title, "`Distance Resolution` must be larger than 0.")
-      return false
-    }
-    distanceResolutionInPixels = _distanceResolutionInPixels
-
-    val _angleResolutionInDegrees = gd.getNextNumber
-    if (_angleResolutionInDegrees <= 0) {
-      IJ.error(Title, "`Angle Resolution` must be larger than 0.")
-      return false
-    }
-    angleResolutionInDegrees = _angleResolutionInDegrees
-
-    val _minimumVotes = scala.math.round(gd.getNextNumber).toInt
-    if (_minimumVotes <= 0) {
-      IJ.error(Title, "`Minimum Votes` must be larger than 0.")
-      return false
-    }
-    minimumVotes = _minimumVotes
-
-    sendToResultsTable = gd.getNextBoolean
-
-    true
-  }
+  override protected def Title = "Hough Lines"
 
   private def linesToRhoTheta(lines: Vec2fVector): Seq[(Float, Float)] = {
     for (i <- 0 until lines.size().toInt) yield {
