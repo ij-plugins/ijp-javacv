@@ -6,3 +6,4 @@ sandbox/
 .DS_Store
 /_local_/
 /.run/
+/lib/
