@@ -2,7 +2,7 @@ import sbt.Keys.version
 import xerial.sbt.Sonatype.GitHubHosting
 
 lazy val _version       = "0.5.0.1-SNAPSHOT"
-lazy val _scalaVersions = Seq("3.2.2", "2.13.10")
+lazy val _scalaVersions = Seq("3.3.3", "2.13.13")
 lazy val _scalaVersion  = _scalaVersions.head
 
 name := "ijp-javacv"
@@ -41,15 +41,15 @@ val commonSettings = Seq(
       Seq(
         "-explaintypes",
         "-Xsource:3",
-        "-Wunused:imports,privates,locals",
-        "-Wvalue-discard",
-        "-Xlint",
-        "-Xcheckinit",
-        "-Xlint:missing-interpolator",
-        "-Xlint:nonlocal-return",
-        "-Ymacro-annotations",
-        "-Ywarn-dead-code",
-        "-Ywarn-unused:-patvars,_",
+//        "-Wunused:imports,privates,locals",
+//        "-Wvalue-discard",
+//        "-Xlint",
+//        "-Xcheckinit",
+//        "-Xlint:missing-interpolator",
+//        "-Xlint:nonlocal-return",
+//        "-Ymacro-annotations",
+//        "-Ywarn-dead-code",
+//        "-Ywarn-unused:-patvars,_",
         )
     else
       Seq(
@@ -63,18 +63,18 @@ val commonSettings = Seq(
   classpathTypes += "maven-plugin",
   // @formatter:off
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp"  % "1.5.8" withSources() withJavadoc(),
-    "org.bytedeco" % "javacpp"  % "1.5.8" classifier platform,
-    "org.bytedeco" % "javacv"   % "1.5.8" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" withSources() withJavadoc(),
-    "org.bytedeco" % "opencv"   % "4.6.0-1.5.8" classifier platform,
-    "org.bytedeco" % "openblas" % "0.3.21-1.5.8" withSources() withJavadoc(),
-    "org.bytedeco" % "openblas" % "0.3.21-1.5.8" classifier platform,
-    "net.imagej"   % "ij"       % "1.54c",
+    "org.bytedeco" % "javacpp"  % "1.5.10" withSources() withJavadoc(),
+    "org.bytedeco" % "javacpp"  % "1.5.10" classifier platform,
+    "org.bytedeco" % "javacv"   % "1.5.10" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv"   % "4.9.0-1.5.10" withSources() withJavadoc(),
+    "org.bytedeco" % "opencv"   % "4.9.0-1.5.10" classifier platform,
+    "org.bytedeco" % "openblas" % "0.3.26-1.5.10" withSources() withJavadoc(),
+    "org.bytedeco" % "openblas" % "0.3.26-1.5.10" classifier platform,
+    "net.imagej"   % "ij"       % "1.54i",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest" % "3.2.15" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.18" % "test",
     ),
   // @formatter:on
   Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
@@ -134,7 +134,7 @@ lazy val ijp_javacv_plugins =
       commonSettings,
       name := "ijp-javacv-plugins",
       description := "IJP JavaCV ImageJ Plugins",
-      libraryDependencies ++= Seq("com.beachape" %% "enumeratum" % "1.7.2"),
+      libraryDependencies ++= Seq("com.beachape" %% "enumeratum" % "1.7.3"),
       scalacOptions ++=
         (if (isScala2(scalaVersion.value))
           Seq.empty[String]
@@ -151,7 +151,7 @@ lazy val examples_ij =
     .in(file("Examples-ImageJ"))
     .settings(
       commonSettings,
-      name := "examples",
+      name := "examples-imagej",
       description := "IJP JavaCV Examples for ImageJ in Scala",
       publishArtifact := false,
       publish / skip := true,
@@ -163,7 +163,7 @@ lazy val examples_ij_java =
     .in(file("Examples-ImageJ-Java"))
     .settings(
       commonSettings,
-      name := "examples",
+      name := "examples-imagej-java",
       description := "IJP JavaCV Examples for ImageJ in Java",
       publishArtifact := false,
       publish / skip := true,
@@ -176,12 +176,25 @@ lazy val examples_cli =
     .in(file("Examples-CLI"))
     .settings(
       commonSettings,
-      name := "examples",
+      name := "examples-cli",
       description := "IJP JavaCV Examples for Scala CLI or Worksheet",
       publishArtifact := false,
       publish / skip := true,
       )
     .dependsOn(ijp_javacv_core)
+
+lazy val examples_groovy =
+  project
+    .in(file("Examples-Groovy"))
+    .settings(
+      commonSettings,
+      name := "examples-groovy",
+      description := "IJP JavaCV Examples for Groovy",
+      publishArtifact := false,
+      publish / skip := true,
+      )
+    .dependsOn(ijp_javacv_core)
+
 
 // The 'experimental' is not a part of distribution.
 // It is intended for ImageJ with plugins and fast local experimentation with new features.
@@ -191,8 +204,8 @@ lazy val experimental = project
     commonSettings,
     name := "experimental",
     libraryDependencies ++= Seq(
-      "net.sf.ij-plugins" %% "scala-console-plugins" % "1.7.1"
-    ),
+      "net.sf.ij-plugins" %% "scala-console-plugins" % "1.8.0"
+      ),
     // Do not publish this artifact
     publishArtifact := false,
     publish / skip := true,
