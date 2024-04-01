@@ -2,7 +2,6 @@ import ij_plugins.javacv.mcc.Utils.*
 import ij_plugins.javacv.util.OpenCVUtils.*
 import org.bytedeco.opencv.global.opencv_imgcodecs.IMREAD_COLOR
 import org.bytedeco.opencv.global.opencv_mcc.*
-import org.bytedeco.opencv.opencv_core.*
 import org.bytedeco.opencv.opencv_mcc.*
 
 import java.io.File
