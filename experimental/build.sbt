@@ -10,11 +10,11 @@ libraryDependencies ++= Seq(
   //  "org.scijava" % "scripting-javascript" % "1.0.0",
 
   // not needed for script editor
-  "org.python" % "jython-slim" % "2.7.3",
+  "org.python" % "jython-slim" % "2.7.4",
 
   // dependency overrides to pull bug fixes in transitive dependencies
   "org.scijava" % "scijava-optional" % "1.0.1",
   "org.scijava" % "scijava-table"    % "1.0.2",
-  "org.scijava" % "scijava-ui-swing" % "1.0.1"
+  "org.scijava" % "scijava-ui-swing" % "1.0.2"
 //  "org.codehaus.groovy" % "groovy"           % "3.0.17"
 )

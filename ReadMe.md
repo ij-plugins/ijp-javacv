@@ -14,6 +14,21 @@ Core functionality
 * Utilities for loading and displaying images using JavaCV
 * Helper for converting between OpenCV and Scala/Java constructs
 * API for conversion between ImageJ and OpenCV types
+* Color Chart Detector
+
+ImageJ Plugins
+--------------
+Some of the functionality of [OpenCV]/[JavaCV] is exposed through ImageJ plugins
+
+* ColorChecker Detector
+* Hough Circles
+* Interactive segmentation using GrabCut algorithm
+
+More information about plugins is in the [Wiki]
+
+### ImageJ Plugins Installation
+
+Plugin binaries are provided on the [Releases] page
 
 ImageJ Scription
 ----------------
@@ -105,20 +120,6 @@ if (detector.process(mat, MCC24)) {
 } else
   println("ColorChecker not detected")
 ```
-
-ImageJ Plugins
---------------
-Some of the functionality of [OpenCV]/[JavaCV] is exposed through ImageJ plugins
-
-* ColorChecker Detector
-* Hough Circles
-* Interactive segmentation using GrabCut algorithm
-
-More information about plugins is in the [Wiki]
-
-### Installation
-
-Plugin binaries are provided on the [Releases] page
 
 
 [ImageJ]: http://imagej.net/index.html

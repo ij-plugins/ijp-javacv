@@ -70,11 +70,11 @@ val commonSettings = Seq(
     "org.bytedeco" % "opencv"   % "4.9.0-1.5.10" classifier platform,
     "org.bytedeco" % "openblas" % "0.3.26-1.5.10" withSources() withJavadoc(),
     "org.bytedeco" % "openblas" % "0.3.26-1.5.10" classifier platform,
-    "net.imagej"   % "ij"       % "1.54i",
+    "net.imagej"   % "ij"       % "1.54k",
     //    "com.beachape"  %% "enumeratum" % "1.5.13",
     //    "mpicbg"         % "mpicbg"     % "1.1.1",
     // tests             
-    "org.scalatest" %% "scalatest" % "3.2.18" % "test",
+    "org.scalatest" %% "scalatest" % "3.2.19" % "test",
     ),
   // @formatter:on
   Compile / doc / scalacOptions ++= Opts.doc.title("IJP JavaCV API"),
@@ -134,7 +134,7 @@ lazy val ijp_javacv_plugins =
       commonSettings,
       name := "ijp-javacv-plugins",
       description := "IJP JavaCV ImageJ Plugins",
-      libraryDependencies ++= Seq("com.beachape" %% "enumeratum" % "1.7.3"),
+      libraryDependencies ++= Seq("com.beachape" %% "enumeratum" % "1.7.4"),
       scalacOptions ++=
         (if (isScala2(scalaVersion.value))
           Seq.empty[String]
